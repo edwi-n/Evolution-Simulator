@@ -9,3 +9,5 @@ Include
 
     app.debug = True
     app.run(host="0.0.0.0", port=5000)
+
+https://stackoverflow.com/questions/1509677/kill-detached-screen-session
