@@ -1,18 +1,23 @@
 #!/usr/bin/env python3
 
-from flask import Flask
-from flask import render_template
-from flask import request
+from flask import Flask, render_template, request
 
 app = Flask(__name__)
 
-@app.route("/")
+@app.route("/", methods=["GET", "POST"])
 def index():
-    if "open" in request.form:
-        app.route("/open")
-    elif "close" in request.form:
-        return start()
-    return render_template("index.html")
+    print(request.method)
+    if request.method == 'POST':
+        if request.form['submit'] == 'Open Simulation':
+            return app.redirect("/open")
+        elif request.form['submit'] == 'Create Simulation':
+            return app.redirect("/start")
+    elif request.method == 'GET':
+        return render_template('index.html')
+
+@app.route("/test")
+def reroute():
+    return app.redirect("/")
 
 @app.route("/start")
 def start():

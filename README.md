@@ -5,6 +5,9 @@
 Useful Links:
 [https://stackoverflow.com/questions/47455680/running-a-python-script-on-google-cloud-compute-engine](url)
 
+To connect:
+ssh -i test_key.pem azureuser@evolutionsimulator.northcentralus.cloudapp.azure.com
+
 Include
 
 #!/usr/bin/env python3
