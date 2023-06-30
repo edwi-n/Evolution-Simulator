@@ -4,13 +4,18 @@ from flask import Flask, render_template, request
 
 app = Flask(__name__)
 
+
+size = -1
+numberOfIterations = -1
+fitnessFunction = ""
+
 @app.route("/", methods=["GET", "POST"])
 def index():
     print(request.method)
     if request.method == 'POST':
         if request.form['submit'] == 'Open Simulation':
             return app.redirect("/open")
-        elif request.form['submit'] == 'Create Simulation':
+        elif request.form['submit'] == 'New Simulation':
             return app.redirect("/start")
     elif request.method == 'GET':
         return render_template('index.html')
@@ -19,8 +24,15 @@ def index():
 def reroute():
     return app.redirect("/")
 
-@app.route("/start")
+@app.route("/start", methods=["GET", "POST"])
 def start():
+    if(request.method == "POST"):
+       global size, numberOfIterations, fitnessFunction
+       size = request.form["size"]
+       numberOfIterations = request.form["iteration"]
+       fitnessFunction = request.form["fitness"]
+       return app.redirect("/simulation")
+
     return render_template("start.html")
 
 @app.route("/open")
@@ -29,6 +41,7 @@ def open():
 
 @app.route("/simulation")
 def simulate():
+    # return str(size)+"\n"+str(numberOfIterations)+"\n"+fitnessFunction
     return render_template("simulation.html")
 
 @app.route("/end")
