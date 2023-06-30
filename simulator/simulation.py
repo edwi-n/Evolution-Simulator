@@ -1,12 +1,9 @@
 class Simulation:
-    pass
+    def __init__(self):
+        self.global
 
 
 class Organism:
-    pass
-
-
-class Display:
     pass
 
 
@@ -14,4 +11,9 @@ class Genome:
     pass
 
 
+class FitnessFunction:
+    pass
 
+
+class SimulationData:
+    pass
