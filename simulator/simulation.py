@@ -1,3 +1,6 @@
+import math
+from random import randint
+
 class Simulation:
     def __init__(self, populationSize, numberOfIterations, fitnessFunction, dataObject):
         self.globalID = 0
@@ -20,11 +23,12 @@ class Simulation:
     def geneticAlgorithm(self):
         pass
 
-    def addOrganism(self):
-        pass
-
-    def deleteOrganism(self):
-        pass
+    def deleteOrganism(self, id):
+        for i in range(len(self.organisms)):
+            if(self.organisms[i].id == id):
+                del self.organisms[i]
+                return True
+        return False
 
     def updateIteration(self):
         pass
@@ -35,8 +39,23 @@ class Simulation:
     def updateSimulationSpeed(self, newSpeed):
         self.simulationSpeed = newSpeed
 
-    def createOrganism(self):
-        pass
+    def createOrganism(self, type = -1, xCoordinate = -1, yCoordinate = -1, genomeObject = -1):
+        if(type == -1):
+            newCoord = (randint(0, 1000), randint(0, 1000))
+
+            while newCoord in self.coordinates:
+                newCoord = (randint(0, 1000), randint(0, 1000))
+
+            self.coordinates[newCoord] = True
+            newGenome = self.createGenes()
+            self.globalID += 1
+
+            self.organisms.append(Organism(self.globalID-1, newCoord[0], newCoord[1], newGenome))
+        else:
+            self.coordinates[(xCoordinate, yCoordinate)] = True
+            self.globalID += 1
+
+            self.organisms.append(Organism(self.globalID-1, xCoordinate, yCoordinate, genomeObject))
 
     def createGenes(self):
         pass
@@ -78,7 +97,7 @@ class Organism:
 
 class Genome:
     def __init__(self, actionGenes, sensoryGenes):
-        self.actionGenes = acionGenes
+        self.actionGenes = actionGenes
         self.sensoryGenes = sensoryGenes
 
     def setActionGenes(self, actionGenes):
@@ -106,7 +125,7 @@ class FitnessFunction:
         self.locationCoordinates = [xCoordinate, yCoordinate]
 
     def getDistanceFromLocation(self, xCoordinate, yCoordinate):
-        return floor(sqrt((xCoordinate-self.locationCoordinates[0])**2+(yCoordinate-self.locationCoordinates[1])**2))
+        return math.floor(math.sqrt((xCoordinate-self.locationCoordinates[0])**2+(yCoordinate-self.locationCoordinates[1])**2))
 
     def performLocationFunc(self):
         pass
@@ -121,15 +140,57 @@ class FitnessFunction:
 
 class SimulationData:
     def __init__(self):
-        self.data = {}
+        self.__data = {}
 
     def setIterationData(self, index, data):
-        self.data[index] = data
+        self.__data[index] = data
 
     def getIterationData(self, index):
-        return self.data[index]
+        return self.__data[index]
+
+    def initOrganisms(self, organisms):
+        self.__data["organisms"] = organisms
+
+    def getOrganisms(self):
+        return self.__data["organisms"]
 
 
+newSimulation = False
 simulationData = SimulationData()
-simulation = Simulation(100, 100, "health", simulationData)
+
+if(newSimulation):
+    population_size = int(input("Enter population size: "))
+    total_iterations = int(input("Enter the number of iterations: "))
+    fitness_function = input("Fitness function: ").lower()
+else:
+    # Get existing simulation data
+    population_size = 100
+    total_iterations = 100
+    fitness_function = "health"
+
+    # Update simulationData
+
+simulation = Simulation(population_size, total_iterations, fitness_function, simulationData)
+
+# if newSimulation:
+#     for i in range(population_size):
+#         simulation.createOrganism(-1)
+# else:
+#     allOrganisms = simulationData.getOrganisms()
+#     for i in range(population_size):
+#         actionGene = allOrganisms[i][3]
+#         sensoryGene = allOrganisms[i][4]
+#         newGenome = Genome(actionGene, sensoryGene)
+#         simulation.createOrganism(1, allOrganisms[i][0], allOrganisms[i][1], allOrganisms[i][2], newGenome)
+
+for i in range(population_size):
+    simulation.createOrganism(-1)
+
+
+simulation.displayInfo()
+
+print(simulation.organisms)
+
+# print(simulation.deleteOrganism(2))
+
 
