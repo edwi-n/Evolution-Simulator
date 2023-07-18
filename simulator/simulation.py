@@ -1,3 +1,8 @@
+# Change grid size to 1000 x 1000
+
+# If it is not a new simulation, the parameters cannot change
+
+
 import math
 from random import randint
 
@@ -18,7 +23,12 @@ class Simulation:
         print(f"Population Size: {self.populationSize}\nTotal Iterations: {self.numberOfIterations}\nFitness Function: {self.fitnessFunction}")
 
     def displaySimulation(self):
-        pass
+        grid = ["."*100]*100
+        for i in self.organisms:
+            currRow = list(grid[i.xCoordinate])
+            currRow[i.yCoordinate] = "x"
+            grid[i.xCoordinate] = "".join(currRow)
+        print("\n".join(grid))
 
     def geneticAlgorithm(self):
         pass
@@ -41,15 +51,14 @@ class Simulation:
 
     def createOrganism(self, type = -1, xCoordinate = -1, yCoordinate = -1, genomeObject = -1):
         if(type == -1):
-            newCoord = (randint(0, 1000), randint(0, 1000))
+            newCoord = (randint(0, 99), randint(0, 99))
 
             while newCoord in self.coordinates:
-                newCoord = (randint(0, 1000), randint(0, 1000))
+                newCoord = (randint(0, 99), randint(0, 99))
 
             self.coordinates[newCoord] = True
-            newGenome = self.createGenes()
+            newGenome = Genome(self.createGenes(), [])
             self.globalID += 1
-
             self.organisms.append(Organism(self.globalID-1, newCoord[0], newCoord[1], newGenome))
         else:
             self.coordinates[(xCoordinate, yCoordinate)] = True
@@ -58,7 +67,12 @@ class Simulation:
             self.organisms.append(Organism(self.globalID-1, xCoordinate, yCoordinate, genomeObject))
 
     def createGenes(self):
-        pass
+        total_remaining = 100
+        initial_probability = [0, 0, 0, 0, 0, 0, 0, 0]
+        for i in range(8):
+            initial_probability[i] = randint(0, total_remaining)
+            total_remaining -= initial_probability[i]
+        return initial_probability
 
     def validateGenes(self):
         pass
@@ -70,6 +84,7 @@ class Simulation:
         pass
 
     def updateDisplay(self):
+        # Get available cells, then generate new probability, then randomly generate number and move. Use pseudocode in page 38.
         pass
 
 
@@ -164,7 +179,7 @@ if(newSimulation):
     fitness_function = input("Fitness function: ").lower()
 else:
     # Get existing simulation data
-    population_size = 100
+    population_size = 1000
     total_iterations = 100
     fitness_function = "health"
 
@@ -187,9 +202,10 @@ for i in range(population_size):
     simulation.createOrganism(-1)
 
 
-simulation.displayInfo()
+# simulation.displayInfo()
 
-print(simulation.organisms)
+# print(simulation.organisms)
+simulation.displaySimulation()
 
 # print(simulation.deleteOrganism(2))
 
