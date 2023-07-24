@@ -13,6 +13,7 @@ size = -1
 numberOfIterations = -1
 fitnessFunction = ""
 
+
 @app.route("/", methods=["GET", "POST"])
 def index():
     print(request.method)
@@ -24,24 +25,28 @@ def index():
     elif request.method == 'GET':
         return render_template('index.html')
 
+
 @app.route("/test")
 def reroute():
     return app.redirect("/")
 
+
 @app.route("/start", methods=["GET", "POST"])
 def start():
-    if(request.method == "POST"):
-       global size, numberOfIterations, fitnessFunction
-       size = request.form["size"]
-       numberOfIterations = request.form["iteration"]
-       fitnessFunction = request.form["fitness"]
-       return app.redirect("/simulation")
+    if (request.method == "POST"):
+        global size, numberOfIterations, fitnessFunction
+        size = request.form["size"]
+        numberOfIterations = request.form["iteration"]
+        fitnessFunction = request.form["fitness"]
+        return app.redirect("/simulation")
 
     return render_template("start.html")
+
 
 @app.route("/open")
 def open():
     return render_template("open.html")
+
 
 @app.route("/simulation")
 def simulate():
@@ -49,6 +54,7 @@ def simulate():
     if str(numberOfIterations) == "" or str(size) == "" or fitnessFunction == "":
         return app.redirect("/init-simulation-error")
     return render_template("simulation.html")
+
 
 @app.route("/init-simulation-error")
 def init_simulation_error():
@@ -65,6 +71,7 @@ def init_simulation_error():
 def end():
     return render_template("end.html")
 
-if(__name__ == "__main__"):
+
+if (__name__ == "__main__"):
     app.debug = True
     app.run(host="0.0.0.0", port=5000)

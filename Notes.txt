@@ -1,0 +1,6 @@
+Only changeable settings will be speed
+
+Use JSON to send simulation data to client
+
+Simulation Data class should be able to read database and file and convert to JSON which contains data about the entire simulation
+(including organism genes, their movement, location and etc) this is then sent to the website and displayed.
