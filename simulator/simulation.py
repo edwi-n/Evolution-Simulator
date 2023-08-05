@@ -31,6 +31,7 @@ class Simulation:
             f"Population Size: {self.populationSize}\nTotal Iterations: {self.numberOfIterations}\nFitness Function: {self.fitnessFunction}")
 
     def displaySimulation(self):
+        print(len(self.organisms))
         grid = ["."*self.gridSize]*self.gridSize
         for i in self.organisms:
             currRow = list(grid[i.xCoordinate])
@@ -56,16 +57,24 @@ class Simulation:
             newProbability = self.combineGenes(
                 self.organisms[ind].genome.actionGenes, self.organisms[ind+1].genome.actionGenes)
             newGenome = Genome(newProbability, [])
-            newCoord = self.generateCoordinates()
-            self.coordinates[(newCoord)] = True
-            newOrganism = Organism(
-                self.globalID, newCoord[0], newCoord[1], newGenome)
+            newCoord1 = self.generateCoordinates()
+            newCoord2 = self.generateCoordinates()
+            self.coordinates[(newCoord1)] = True
+            self.coordinates[(newCoord2)] = True
+            newOrganism1 = Organism(
+                self.globalID, newCoord1[0], newCoord1[1], newGenome)
             self.globalID += 1
-            self.organisms.append(newOrganism)
+            newOrganism2 = Organism(
+                self.globalID, newCoord2[0], newCoord2[1], newGenome)
+            self.globalID += 1
+            self.organisms.append(newOrganism1)
+            self.organisms.append(newOrganism2)
             ind += 2
 
-        for i in range(math.ceil(self.populationSize/2), self.populationSize):
+        for i in range(self.populationSize % 2, self.populationSize):
             self.deleteOrganism(selectionProcess[i][1])
+        # for i in range(math.ceil(self.populationSize/2), self.populationSize):
+        #     self.deleteOrganism(selectionProcess[i][1])
 
     def deleteOrganism(self, id):
         for i in range(len(self.organisms)):
@@ -266,6 +275,7 @@ class FitnessFunction:
 class SimulationData:
     def __init__(self):
         self.__data = {}
+        self.__data["move"] = {}
 
     def setIterationData(self, index, data):
         self.__data[index] = data
@@ -276,8 +286,43 @@ class SimulationData:
     def initOrganisms(self, organisms):
         self.__data["organisms"] = organisms
 
+    def initSize(self, size):
+        self.__data["size"] = size
+
+    def initFitnessFunction(self, fitnessType, location=(0, 0)):
+        if (fitnessType == "health"):
+            self.__data["fitness"] = "health"
+        else:
+            self.__data["fitness"] = "location"
+            self.__data["location_x"] = location[0]
+            self.__data["location_y"] = location[1]
+
+    def initIterationCount(self, count):
+        self.__data["count"] = count
+
     def getOrganisms(self):
         return self.__data["organisms"]
+
+    def getSize(self):
+        return self.__data["size"]
+
+    def getFitnessFunction(self):
+        return self.__data["fitness"]
+
+    def getLocation(self):
+        if (self.__data["fitness"] == "location"):
+            return (self.__data["location_x"], self.__data["location_y"])
+        else:
+            return -1
+
+    def getIterationCount(self):
+        return self.__data["count"]
+
+    def updateCoordinate(self, id, coord):
+        if (id in self.__data["move"]):
+            self.__data["move"][id].append(coord)
+        else:
+            self.__data["move"][id] = [coord]
 
 
 newSimulation = False
@@ -301,7 +346,7 @@ else:
 
     if fitness_function == "location":
         locationX = 50
-        locationY = 50
+        locationY = 99
 
     # Update simulationData
 

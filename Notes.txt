@@ -4,3 +4,10 @@ Use JSON to send simulation data to client
 
 Simulation Data class should be able to read database and file and convert to JSON which contains data about the entire simulation
 (including organism genes, their movement, location and etc) this is then sent to the website and displayed.
+
+
+
+Simulation Data class's self.__data["organism"] will be an array of coordinates with genome. It can then be iterated through
+using the population size as it repeats every x times where x is the population size.
+
+
