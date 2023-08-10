@@ -1,17 +1,21 @@
 #!/usr/bin/env python3
 
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 import sys
 # sys.path.insert(1, '~/Computer-Science-NEA/simulator')
 # import simulation.py
 from simulator import simulation
+import json
 
 app = Flask(__name__)
 
 
+newSimulation = True
 size = -1
 numberOfIterations = -1
-fitnessFunction = ""
+fitness_function = ""
+locationType = ""
+simulationData = None
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -34,10 +38,11 @@ def reroute():
 @app.route("/start", methods=["GET", "POST"])
 def start():
     if (request.method == "POST"):
-        global size, numberOfIterations, fitnessFunction
+        global size, numberOfIterations, fitness_function, locationType
         size = request.form["size"]
         numberOfIterations = request.form["iteration"]
-        fitnessFunction = request.form["fitness"]
+        fitness_function = request.form["fitness"]
+        locationType = request.form["locationtype"]
         return app.redirect("/simulation")
 
     return render_template("start.html")
@@ -45,15 +50,37 @@ def start():
 
 @app.route("/open")
 def open():
+    # check database or file for simulation data
+    global newSimulation, simulationData
+    newSimulation = False
+    simulationData = None
     return render_template("open.html")
 
 
 @app.route("/simulation")
 def simulate():
     # return str(size)+"\n"+str(numberOfIterations)+"\n"+fitnessFunction
-    if str(numberOfIterations) == "" or str(size) == "" or fitnessFunction == "":
+    if str(numberOfIterations) == "" or str(size) == "" or fitness_function == "":
         return app.redirect("/init-simulation-error")
-    return render_template("simulation.html")
+    if fitness_function == "location" and locationType == "":
+        return app.redirect("/init-simulation-error")
+
+    # global newSimulation, size, numberOfIterations, fitness_function, locationType
+    if (newSimulation):
+        locationCoord = {"north": (0, 50), "east": (
+            50, 99), "south": (99, 50), "west": (50, 0)}[locationType]
+        fitnessFunction = simulation.FitnessFunction(fitness_function)
+        if (fitness_function == "location"):
+            fitnessFunction.setLocation(locationCoord[0], locationCoord[1])
+        simulationData = simulation.SimulationData()
+        sim = simulation.Simulation(
+            int(size), int(numberOfIterations), fitnessFunction, simulationData)
+        data = sim.start()
+        # print(data)
+    else:
+        data = simulationData.getData()
+
+    return render_template("simulation.html", data=json.dumps(data))
 
 
 @app.route("/init-simulation-error")

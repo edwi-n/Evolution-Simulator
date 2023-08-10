@@ -11,3 +11,6 @@ Simulation Data class's self.__data["organism"] will be an array of coordinates 
 using the population size as it repeats every x times where x is the population size.
 
 
+Priority queue / data structures
+
+Find a way to serve JSON

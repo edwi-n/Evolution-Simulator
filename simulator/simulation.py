@@ -26,6 +26,15 @@ class Simulation:
         self.dx = [-1, -1, -1, 0, 1, 1, 1, 0]
         self.dy = [-1, 0, 1, 1, 1, 0, -1, -1]
 
+    def start(self):
+        for i in range(self.populationSize):
+            self.createOrganism(-1)
+
+        for i in range(self.numberOfIterations):
+            self.updateIteration(i)
+
+        return self.simulationData.getData()
+
     def displayInfo(self):
         print(
             f"Population Size: {self.populationSize}\nTotal Iterations: {self.numberOfIterations}\nFitness Function: {self.fitnessFunction}")
@@ -53,25 +62,30 @@ class Simulation:
         # Reproduction
         newOrganisms = []
         ind = 0
+
+        # Top 10% survive, Top 50% reproduce
+
         while ind+1 < self.populationSize:
             newProbability = self.combineGenes(
                 self.organisms[ind].genome.actionGenes, self.organisms[ind+1].genome.actionGenes)
             newGenome = Genome(newProbability, [])
+            newGenome.mutateGenes()
             newCoord1 = self.generateCoordinates()
-            newCoord2 = self.generateCoordinates()
-            self.coordinates[(newCoord1)] = True
-            self.coordinates[(newCoord2)] = True
-            newOrganism1 = Organism(
-                self.globalID, newCoord1[0], newCoord1[1], newGenome)
-            self.globalID += 1
-            newOrganism2 = Organism(
-                self.globalID, newCoord2[0], newCoord2[1], newGenome)
-            self.globalID += 1
-            self.organisms.append(newOrganism1)
-            self.organisms.append(newOrganism2)
+            self.createOrganism(1, newCoord1[0], newCoord1[1], newGenome)
+            # newCoord2 = self.generateCoordinates()
+            # self.coordinates[(newCoord1)] = True
+            # self.coordinates[(newCoord2)] = True
+            # newOrganism1 = Organism(
+            #     self.globalID, newCoord1[0], newCoord1[1], newGenome)
+            # self.globalID += 1
+            # newOrganism2 = Organism(
+            #     self.globalID, newCoord2[0], newCoord2[1], newGenome)
+            # self.globalID += 1
+            # self.organisms.append(newOrganism1)
+            # self.organisms.append(newOrganism2)
             ind += 2
 
-        for i in range(self.populationSize % 2, self.populationSize):
+        for i in range(math.ceil(self.populationSize/2), self.populationSize):
             self.deleteOrganism(selectionProcess[i][1])
         # for i in range(math.ceil(self.populationSize/2), self.populationSize):
         #     self.deleteOrganism(selectionProcess[i][1])
@@ -100,18 +114,21 @@ class Simulation:
                     i.updateCoordinate(
                         i.xCoordinate + self.dx[j], i.yCoordinate + self.dy[j])
                     self.coordinates[(i.xCoordinate, i.yCoordinate)] = True
+                    self.simulationData.updateMovement(
+                        i.id, i.xCoordinate, i.yCoordinate)
                     break
                 else:
                     continue
 
     def updateIteration(self, iterationNumber):
-        simulation.displaySimulation()
-        for i in range(self.gridSize):
-            os.system("cls")
-            simulation.move()
-            print(iterationNumber+1)
-            simulation.displaySimulation()
-            time.sleep(0.05)
+        self.simulationData.updateMovement(-1, -1, -1)
+        # self.displaySimulation()
+        # for i in range(self.gridSize):
+        #     os.system("cls")
+        #     self.move()
+        #     print(iterationNumber+1)
+        #     self.displaySimulation()
+        #     time.sleep(0.05)
 
         self.geneticAlgorithm()
 
@@ -122,6 +139,7 @@ class Simulation:
 
             self.coordinates[newCoord] = True
             i.updateCoordinate(newCoord[0], newCoord[1])
+            self.simulationData.updateMovement(i.id, newCoord[0], newCoord[1])
 
     def updateFitnessFunction(self, newFunction):
         self.fitnessFunction = newFunction
@@ -132,20 +150,16 @@ class Simulation:
     def createOrganism(self, type=-1, xCoordinate=-1, yCoordinate=-1, genomeObject=-1):
         if (type == -1):
             newCoord = self.generateCoordinates()
-
             self.coordinates[newCoord] = True
-
-            newGenome = Genome(self.createGenes(), [])
-
-            self.globalID += 1
-            self.organisms.append(
-                Organism(self.globalID-1, newCoord[0], newCoord[1], newGenome))
-        else:
-            self.coordinates[(xCoordinate, yCoordinate)] = True
-            self.globalID += 1
-
-            self.organisms.append(
-                Organism(self.globalID-1, xCoordinate, yCoordinate, genomeObject))
+            xCoordinate = newCoord[0]
+            yCoordinate = newCoord[1]
+            genomeObject = Genome(self.createGenes(), [])
+        self.coordinates[(xCoordinate, yCoordinate)] = True
+        self.globalID += 1
+        newOrganism = Organism(
+            self.globalID-1, xCoordinate, yCoordinate, genomeObject)
+        self.organisms.append(newOrganism)
+        self.simulationData.addOrganism(newOrganism)
 
     def createGenes(self):
         total_remaining = 100
@@ -248,7 +262,12 @@ class Genome:
         return self.sensoryGenes
 
     def mutateGenes(self):
-        pass
+        if (randint(0, 99) == 1):
+            self.actionGenes[randint(
+                0, len(self.actionGenes)-1)] += (-1)**randint(0, 1)
+        # elif (randint(0, 99) == 1):
+        #     self.sensoryGenes[randint(0, len(self.sensoryGenes)-1)
+        #                       ] += (-1)**randint(0, 1)
 
 
 class FitnessFunction:
@@ -275,7 +294,11 @@ class FitnessFunction:
 class SimulationData:
     def __init__(self):
         self.__data = {}
-        self.__data["move"] = {}
+        self.__data["movement"] = []
+        self.__data["organisms"] = []
+
+    def getData(self):
+        return self.__data
 
     def setIterationData(self, index, data):
         self.__data[index] = data
@@ -318,68 +341,72 @@ class SimulationData:
     def getIterationCount(self):
         return self.__data["count"]
 
-    def updateCoordinate(self, id, coord):
-        if (id in self.__data["move"]):
-            self.__data["move"][id].append(coord)
-        else:
-            self.__data["move"][id] = [coord]
+    def addOrganism(self, organism):
+        self.__data["organisms"].append(
+            [organism.id, organism.genome.actionGenes, organism.genome.sensoryGenes])
+
+    def updateMovement(self, id, xCoordinate, yCoordinate):
+        self.__data["movement"].append((id, (xCoordinate, yCoordinate)))
 
 
-newSimulation = False
-simulationData = SimulationData()
+# newSimulation = False
+# simulationData = SimulationData()
 
-if (newSimulation):
-    population_size = int(input("Enter population size: "))
-    total_iterations = int(input("Enter the number of iterations: "))
-    fitness_function = input("Fitness function: ").lower()
+# if (newSimulation):
+#     population_size = int(input("Enter population size: "))
+#     total_iterations = int(input("Enter the number of iterations: "))
+#     fitness_function = input("Fitness function: ").lower()
 
-    if fitness_function == "location":
-        locationX = int(input("Enter location x coordinate: "))
-        locationY = int(input("Enter location y coordinate: "))
-
-
-else:
-    # Get existing simulation data
-    population_size = 1000
-    total_iterations = 100
-    fitness_function = "location"
-
-    if fitness_function == "location":
-        locationX = 50
-        locationY = 99
-
-    # Update simulationData
-
-fitnessFunction = FitnessFunction(fitness_function)
-
-if (fitness_function == "location"):
-    fitnessFunction.setLocation(locationX, locationY)
-
-simulation = Simulation(population_size, total_iterations,
-                        fitnessFunction, simulationData)
+#     if fitness_function == "location":
+#         locationX = int(input("Enter location x coordinate: "))
+#         locationY = int(input("Enter location y coordinate: "))
 
 
-# if newSimulation:
-#     for i in range(population_size):
-#         simulation.createOrganism(-1)
 # else:
-#     allOrganisms = simulationData.getOrganisms()
-#     for i in range(population_size):
-#         actionGene = allOrganisms[i][3]
-#         sensoryGene = allOrganisms[i][4]
-#         newGenome = Genome(actionGene, sensoryGene)
-#         simulation.createOrganism(1, allOrganisms[i][0], allOrganisms[i][1], allOrganisms[i][2], newGenome)
+#     # Get existing simulation data
+#     population_size = 10
+#     total_iterations = 2
+#     fitness_function = "location"
 
-for i in range(population_size):
-    simulation.createOrganism(-1)
+#     if fitness_function == "location":
+#         locationX = 50
+#         locationY = 99
 
-for i in range(total_iterations):
-    simulation.updateIteration(i)
-    time.sleep(1)
+#     # Update simulationData
 
-# simulation.displayInfo()
+# fitnessFunction = FitnessFunction(fitness_function)
 
-# print(simulation.organisms)
+# if (fitness_function == "location"):
+#     fitnessFunction.setLocation(locationX, locationY)
+
+# simulation = Simulation(population_size, total_iterations,
+#                         fitnessFunction, simulationData)
 
 
-# print(simulation.deleteOrganism(2))
+# # if newSimulation:
+# #     for i in range(population_size):
+# #         simulation.createOrganism(-1)
+# # else:
+# #     allOrganisms = simulationData.getOrganisms()
+# #     for i in range(population_size):
+# #         actionGene = allOrganisms[i][3]
+# #         sensoryGene = allOrganisms[i][4]
+# #         newGenome = Genome(actionGene, sensoryGene)
+# #         simulation.createOrganism(1, allOrganisms[i][0], allOrganisms[i][1], allOrganisms[i][2], newGenome)
+
+# for i in range(population_size):
+#     simulation.createOrganism(-1)
+
+# for i in range(total_iterations):
+#     simulation.updateIteration(i)
+#     time.sleep(1)
+
+
+# print(simulationData.getData())
+
+# # simulation.displayInfo()
+
+# # print(simulation.organisms)
+
+
+# # print(simulation.deleteOrganism(2))
