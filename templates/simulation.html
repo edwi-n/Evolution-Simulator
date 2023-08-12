@@ -28,51 +28,7 @@
           const canvas = document.getElementById("simulation-grid")
           const ctx = canvas.getContext("2d")
           ctx.fillStyle = "white"
-          // ctx.fillRect(0, 0, 100, 100)
           ctx.fillRect(0, 0, 1000, 1000)
-          // ctx.clearRect(0, 0, 10, 10)
-          // let populationSize = data.organisms.length
-          // var j=0;
-          // let prev = {}
-          // while(j<data.movement.length){
-          //           if(data.movement[j][0] == -1){
-          //                     ctx.clearRect(0, 0, canvas.width, canvas.height);
-          //                     prev = {}
-          //                     continue;
-          //           }
-          //           if(data.movement[j][0] in prev){
-          //                     ctx.clearRect(prev[data.movement[j][0]][0], prev[data.movement[j][0]][1], 1, 1)
-          //           }
-          //           ctx.fillRect(data.movement[j][1][0], data.movement[j][1][1], 1, 1)
-          //           prev[data.movement[j][0]] = [data.movement[j][1][0], data.movement[j][1][1]]
-          //           j += 1
-          // }
-          var j=0;
-          var iteration = 1
-          var grid=[]
-          var inner = []
-          for(let k=0; k<100; k++){
-                    inner.push(".")
-          }
-          for(let i=0; i<100; i++){
-                    grid.push(inner)
-          }
-          // displayGrid(grid)
-          var reset = grid
-
-          // function displayGrid(grid){
-          //           final = ""
-          //           for(let i=0; i<grid.length; i++){
-          //                     row = ""
-          //                     for(let j=0; j<grid[i].length; j++){
-          //                               row += grid[i][j]
-          //                     }
-          //                     row += "\n"
-          //                     final += row
-          //           }
-          //           document.getElementById("simulation-grid").innerHTML = ""
-          //           document.getElementById("simulation-grid").innerHTML = final
-          // }
 
           chain = fetch("/get").then((response)=>{
                     console.log(iteration)
@@ -88,7 +44,6 @@
                               })
           for (let i=0; i<100; i++){
                     chain = chain.then((a)=>{
-                              console.log(iteration)
                               iteration+=1
                               return fetch("/get")
                     }).then((response)=>{
@@ -107,16 +62,11 @@
                                         if(data.movement[j][0] in prev){
                                                   ctx.fillRect(prev[data.movement[j][0]][0]*10, prev[data.movement[j][0]][1]*10, 10, 10)
                                         }
-                                        // console.log(data.movement[j])
                                         ctx.clearRect(data.movement[j][1][1]*10, data.movement[j][1][0]*10, 10, 10)
                                         prev[data.movement[j][0]] = [data.movement[j][1][1], [data.movement[j][1][0]]]
-                                        // displayGrid(grid);
-                                        // setTimeout(displayGrid(grid), 1000);
-                                        // document.getElementById("simulation-grid").innerHTML = j.toString()
                                         document.getElementById("simulation-progress").innerHTML = i
                                         j += 1
                               }
-                              // console.log(grid)
                               return j
                     })
           }

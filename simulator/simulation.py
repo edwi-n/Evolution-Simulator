@@ -30,9 +30,6 @@ class Simulation:
         for i in range(self.populationSize):
             self.createOrganism(-1)
 
-        # for i in range(self.numberOfIterations):
-        #     self.updateIteration(i)
-
         return self.simulationData.getData()
 
     def displayInfo(self):
@@ -71,23 +68,10 @@ class Simulation:
             newGenome.mutateGenes()
             newCoord1 = self.generateCoordinates()
             self.createOrganism(1, newCoord1[0], newCoord1[1], newGenome)
-            # newCoord2 = self.generateCoordinates()
-            # self.coordinates[(newCoord1)] = True
-            # self.coordinates[(newCoord2)] = True
-            # newOrganism1 = Organism(
-            #     self.globalID, newCoord1[0], newCoord1[1], newGenome)
-            # self.globalID += 1
-            # newOrganism2 = Organism(
-            #     self.globalID, newCoord2[0], newCoord2[1], newGenome)
-            # self.globalID += 1
-            # self.organisms.append(newOrganism1)
-            # self.organisms.append(newOrganism2)
             ind += 2
 
         for i in range(math.ceil(self.populationSize/2), self.populationSize):
             self.deleteOrganism(selectionProcess[i][1])
-        # for i in range(math.ceil(self.populationSize/2), self.populationSize):
-        #     self.deleteOrganism(selectionProcess[i][1])
 
     def deleteOrganism(self, id):
         for i in range(len(self.organisms)):
@@ -131,32 +115,16 @@ class Simulation:
             i.updateCoordinate(newCoord[0], newCoord[1])
             self.simulationData.updateMovement(i.id, newCoord[0], newCoord[1])
 
-        # start = time.time()
         for i in range(self.gridSize):
-            # os.system("cls")
-            # start = time.time()
             self.move()
-            # end = time.time()
-            # print(end-start)
+            # os.system("cls")
             # self.displaySimulation()
             # time.sleep(0.01)
-        # end = time.time()
-        # print(end-start)
 
         if (iterationNumber == 99):
             self.displaySimulation()
 
         self.geneticAlgorithm()
-
-        # return self.simulationData
-
-        # self.displaySimulation()
-        # for i in range(self.gridSize):
-        #     os.system("cls")
-        #     self.move()
-        #     print(iterationNumber+1)
-        #     self.displaySimulation()
-        #     time.sleep(0.05)
 
     def updateFitnessFunction(self, newFunction):
         self.fitnessFunction = newFunction
@@ -273,9 +241,6 @@ class Genome:
         if (randint(0, 999) == 1):
             self.actionGenes[randint(
                 0, len(self.actionGenes)-1)] += 1
-        # elif (randint(0, 99) == 1):
-        #     self.sensoryGenes[randint(0, len(self.sensoryGenes)-1)
-        #                       ] += (-1)**randint(0, 1)
 
 
 class FitnessFunction:
@@ -408,32 +373,3 @@ def test():
 # test()
 
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-# # if newSimulation:
-# #     for i in range(population_size):
-# #         simulation.createOrganism(-1)
-# # else:
-# #     allOrganisms = simulationData.getOrganisms()
-# #     for i in range(population_size):
-# #         actionGene = allOrganisms[i][3]
-# #         sensoryGene = allOrganisms[i][4]
-# #         newGenome = Genome(actionGene, sensoryGene)
-# #         simulation.createOrganism(1, allOrganisms[i][0], allOrganisms[i][1], allOrganisms[i][2], newGenome)
-
-# for i in range(population_size):
-#     simulation.createOrganism(-1)
-
-# for i in range(total_iterations):
-#     simulation.updateIteration(i)
-#     time.sleep(1)
-
-
-# print(simulationData.getData())
-
-# # simulation.displayInfo()
-
-# # print(simulation.organisms)
-
-
-# # print(simulation.deleteOrganism(2))

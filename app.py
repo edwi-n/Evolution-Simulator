@@ -59,14 +59,12 @@ def open():
 
 @app.route("/simulation")
 def simulate():
-    # return str(size)+"\n"+str(numberOfIterations)+"\n"+fitnessFunction
     global newSimultion, numberOfIterations, size, fitness_function, fitnessFunction, simulationData, sim
     if str(numberOfIterations) == "" or str(size) == "" or fitness_function == "":
         return app.redirect("/init-simulation-error")
     if fitness_function == "location" and locationType == "":
         return app.redirect("/init-simulation-error")
 
-    # global newSimulation, size, numberOfIterations, fitness_function, locationType
     if (newSimulation):
         locationCoord = {"north": (0, 50), "east": (
             50, 99), "south": (99, 50), "west": (50, 0)}[locationType]
@@ -77,36 +75,7 @@ def simulate():
             int(numberOfIterations), fitness_function)
         sim = simulation.Simulation(
             int(size), int(numberOfIterations), fitnessFunction, simulationData)
-        # sim.updateIteration(int(numberOfIterations))
-        # data = simulationData.getData()
         data = sim.start()
-        # for i in range(numberOfIterations):
-        #     data = sim.updateIteration(i+1)
-        # print(data)
-
-        # while (int(numberOfIterations) > 0):
-        #     numberOfIterations -= 1
-        #     sim.updateIteration(numberOfIterations)
-
-        # data = getData()
-        # while (data != -1):
-        #     # print(data)
-        #     data = getData()
-
-        # start = time.time()
-        # processes = []
-        # for _ in range(numberOfIterations):
-        #     p = multiprocessing.Process(
-        #         target=sim.updateIteration(numberOfIterations))
-        #     p.start()
-        #     processes.append(p)
-
-        # for process in processes:
-        #     process.join()
-
-        # end = time.time()
-        # print(end-start)
-        # data = simulationData.getData()
     else:
         data = simulationData.getData()
 
@@ -119,18 +88,15 @@ def test():
     return render_template("test.html", data=data)
 
 
-@app.route("/get", methods=["GET"])
+@app.route("/get")
 def getNextIteration():
     global numberOfIterations, sim, simulationData, totalCount
-    # print(sim.organisms[size-1].id)
     simulationData.clearMovement()
     simulationData.clearOrganisms()
-    if (request.method == "GET"):
-        sim.updateIteration(totalCount)
-        totalCount += 1
-        data = simulationData.getData()
-        # print(data)
-        return data
+    sim.updateIteration(totalCount)
+    totalCount += 1
+    data = simulationData.getData()
+    return data
 
 
 @app.route("/init-simulation-error")
