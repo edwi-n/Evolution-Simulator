@@ -6,6 +6,8 @@ import sys
 # import simulation.py
 from simulator import simulation
 import json
+import time
+import multiprocessing
 
 app = Flask(__name__)
 
@@ -16,6 +18,9 @@ numberOfIterations = -1
 fitness_function = ""
 locationType = ""
 simulationData = None
+fitnessFunction = None
+sim = None
+totalCount = 0
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -30,17 +35,12 @@ def index():
         return render_template('index.html')
 
 
-@app.route("/test")
-def reroute():
-    return app.redirect("/")
-
-
 @app.route("/start", methods=["GET", "POST"])
 def start():
     if (request.method == "POST"):
         global size, numberOfIterations, fitness_function, locationType
-        size = request.form["size"]
-        numberOfIterations = request.form["iteration"]
+        size = int(request.form["size"])
+        numberOfIterations = int(request.form["iteration"])
         fitness_function = request.form["fitness"]
         locationType = request.form["locationtype"]
         return app.redirect("/simulation")
@@ -60,6 +60,7 @@ def open():
 @app.route("/simulation")
 def simulate():
     # return str(size)+"\n"+str(numberOfIterations)+"\n"+fitnessFunction
+    global newSimultion, numberOfIterations, size, fitness_function, fitnessFunction, simulationData, sim
     if str(numberOfIterations) == "" or str(size) == "" or fitness_function == "":
         return app.redirect("/init-simulation-error")
     if fitness_function == "location" and locationType == "":
@@ -72,15 +73,64 @@ def simulate():
         fitnessFunction = simulation.FitnessFunction(fitness_function)
         if (fitness_function == "location"):
             fitnessFunction.setLocation(locationCoord[0], locationCoord[1])
-        simulationData = simulation.SimulationData()
+        simulationData = simulation.SimulationData(
+            int(numberOfIterations), fitness_function)
         sim = simulation.Simulation(
             int(size), int(numberOfIterations), fitnessFunction, simulationData)
+        # sim.updateIteration(int(numberOfIterations))
+        # data = simulationData.getData()
         data = sim.start()
+        # for i in range(numberOfIterations):
+        #     data = sim.updateIteration(i+1)
         # print(data)
+
+        # while (int(numberOfIterations) > 0):
+        #     numberOfIterations -= 1
+        #     sim.updateIteration(numberOfIterations)
+
+        # data = getData()
+        # while (data != -1):
+        #     # print(data)
+        #     data = getData()
+
+        # start = time.time()
+        # processes = []
+        # for _ in range(numberOfIterations):
+        #     p = multiprocessing.Process(
+        #         target=sim.updateIteration(numberOfIterations))
+        #     p.start()
+        #     processes.append(p)
+
+        # for process in processes:
+        #     process.join()
+
+        # end = time.time()
+        # print(end-start)
+        # data = simulationData.getData()
     else:
         data = simulationData.getData()
 
-    return render_template("simulation.html", data=json.dumps(data))
+    return render_template("simulation.html", data=data)
+
+
+@app.route("/test")
+def test():
+    data = {'test': 10, 'two': 2, "three": [2, 3]}
+    return render_template("test.html", data=data)
+
+
+@app.route("/get", methods=["GET"])
+def getNextIteration():
+    global numberOfIterations, sim, simulationData, totalCount
+    # print(sim.organisms[size-1].id)
+    simulationData.clearMovement()
+    simulationData.clearOrganisms()
+    if (request.method == "GET"):
+        sim.updateIteration(totalCount)
+        totalCount += 1
+        data = simulationData.getData()
+        # print(data)
+        return data
 
 
 @app.route("/init-simulation-error")

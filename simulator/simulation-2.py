@@ -21,7 +21,7 @@ class Simulation:
         self.currentIterationData = ""
         self.simulationData = dataObject
         self.simulationSpeed = 1.0
-        self.coordinates = {}
+        self.coordinates = [[False for x in range(101)] for x in range(101)]
         self.gridSize = 100
         self.dx = [-1, -1, -1, 0, 1, 1, 1, 0]
         self.dy = [-1, 0, 1, 1, 1, 0, -1, -1]
@@ -47,6 +47,11 @@ class Simulation:
             currRow[i.yCoordinate] = "x"
             grid[i.xCoordinate] = "".join(currRow)
         print("\n".join(grid))
+
+    def resetCoordinates(self):
+        for i in range(len(self.coordinates)):
+            for j in range(len(self.coordinates[i])):
+                self.coordinates[i][j] = False
 
     def geneticAlgorithm(self):
         selectionProcess = []
@@ -89,12 +94,19 @@ class Simulation:
         # for i in range(math.ceil(self.populationSize/2), self.populationSize):
         #     self.deleteOrganism(selectionProcess[i][1])
 
-    def deleteOrganism(self, id):
-        for i in range(len(self.organisms)):
-            if (self.organisms[i].id == id):
-                del self.organisms[i]
-                return True
-        return False
+    def deleteOrganism(self, ID):
+        for i in self.organisms:
+            if (i.id == ID):
+                self.organisms.remove(i)
+        # for i in range(len(self.organisms)-1):
+        #     try:
+        #         if (self.organisms[i].id == ID):
+        #             del self.organisms[i]
+        #             return True
+        #     except:
+        #         print(len(self.organisms), i)
+        #         raise IndexError
+        # return False
 
     def move(self):
         for i in self.organisms:
@@ -106,30 +118,38 @@ class Simulation:
                 total_probability += new_probability[j]
                 cumulative_probability[j] = total_probability
 
-            if (total_probability < 0):
+            if (total_probability-1 < 0):
                 return 0
 
-            moveProbability = randint(0, total_probability)
+            moveProbability = randint(0, total_probability-1)
             for j in range(8):
                 if (moveProbability < cumulative_probability[j]):
-                    self.coordinates.pop((i.xCoordinate, i.yCoordinate))
+                    self.coordinates[i.xCoordinate][i.yCoordinate] = False
+                    # self.coordinates.pop((i.xCoordinate, i.yCoordinate))
+                    # if ((i.xCoordinate+self.dx[j], i.yCoordinate + self.dy[j]) in self.coordinates):
+                    #     print(moveProbability, total_probability, new_probability, cumulative_probability, j, i.xCoordinate,
+                    #           i.yCoordinate, i.xCoordinate + self.dx[j], i.yCoordinate + self.dy[j])
+                    # try:
+                    #     self.coordinates.pop((i.xCoordinate, i.yCoordinate))
+                    # except:
+                    #     for arr in self.simulationData.getData()["movement"]:
+                    #         if (arr[0] == i.id):
+                    #             print(arr)
+
+                    #     print((i.xCoordinate, i.yCoordinate))
+                    #     raise SyntaxError
+                    # if ((i.xCoordinate+self.dx[j], i.yCoordinate + self.dy[j]) in self.coordinates):
+                    #     print(i.xCoordinate, i.yCoordinate, i.xCoordinate +
+                    #           self.dx[j], i.yCoordinate + self.dy[j])
                     i.updateCoordinate(
                         i.xCoordinate + self.dx[j], i.yCoordinate + self.dy[j])
-                    self.coordinates[(i.xCoordinate, i.yCoordinate)] = True
+                    self.coordinates[i.xCoordinate][i.yCoordinate] = True
                     self.simulationData.updateMovement(
                         i.id, i.xCoordinate, i.yCoordinate)
                     break
 
     def updateIteration(self, iterationNumber):
         self.simulationData.updateMovement(-1, -1, -1)
-        self.coordinates = {}
-
-        for i in self.organisms:
-            newCoord = self.generateCoordinates()
-
-            self.coordinates[newCoord] = True
-            i.updateCoordinate(newCoord[0], newCoord[1])
-            self.simulationData.updateMovement(i.id, newCoord[0], newCoord[1])
 
         # start = time.time()
         for i in range(self.gridSize):
@@ -139,17 +159,23 @@ class Simulation:
             # end = time.time()
             # print(end-start)
             # self.displaySimulation()
-            # time.sleep(0.01)
         # end = time.time()
         # print(end-start)
 
-        if (iterationNumber == 99):
-            self.displaySimulation()
-
         self.geneticAlgorithm()
+
+        self.resetCoordinates()
+
+        for i in self.organisms:
+            newCoord = self.generateCoordinates()
+            self.coordinates[newCoord[0]][newCoord[1]] = True
+            i.updateCoordinate(newCoord[0], newCoord[1])
+            self.simulationData.updateMovement(i.id, newCoord[0], newCoord[1])
 
         # return self.simulationData
 
+        # if (iterationNumber == 99):
+        #     self.displaySimulation()
         # self.displaySimulation()
         # for i in range(self.gridSize):
         #     os.system("cls")
@@ -164,11 +190,12 @@ class Simulation:
     def createOrganism(self, type=-1, xCoordinate=-1, yCoordinate=-1, genomeObject=-1):
         if (type == -1):
             newCoord = self.generateCoordinates()
-            self.coordinates[newCoord] = True
+            self.coordinates[newCoord[0]][newCoord[1]] = True
             xCoordinate = newCoord[0]
             yCoordinate = newCoord[1]
             genomeObject = Genome(self.createGenes(), [])
-        self.coordinates[(xCoordinate, yCoordinate)] = True
+
+        self.coordinates[xCoordinate][yCoordinate] = True
         self.globalID += 1
         newOrganism = Organism(
             self.globalID-1, xCoordinate, yCoordinate, genomeObject)
@@ -195,7 +222,7 @@ class Simulation:
             if (newX < 0 or newX >= self.gridSize or newY < 0 or newY >= self.gridSize):
                 continue
 
-            if ((newX, newY) in self.coordinates):
+            if (self.coordinates[newX][newY]):
                 continue
 
             new_probability[i] = organism.genome.actionGenes[i]
@@ -215,7 +242,7 @@ class Simulation:
         newCoord = (randint(0, self.gridSize-1),
                     randint(0, self.gridSize-1))
 
-        while newCoord in self.coordinates:
+        while self.coordinates[newCoord[0]][newCoord[1]]:
             newCoord = (randint(0, self.gridSize-1),
                         randint(0, self.gridSize-1))
 
@@ -358,56 +385,44 @@ class SimulationData:
     def updateMovement(self, id, xCoordinate, yCoordinate):
         self.__data["movement"].append((id, (xCoordinate, yCoordinate)))
 
-    def clearMovement(self):
-        self.__data["movement"] = []
 
-    def clearOrganisms(self):
-        self.__data["organisms"] = []
+# newSimulation = False
 
+# if (newSimulation):
+#     population_size = int(input("Enter population size: "))
+#     total_iterations = int(input("Enter the number of iterations: "))
+#     fitness_function = input("Fitness function: ").lower()
 
-def test():
-    newSimulation = False
-
-    if (newSimulation):
-        population_size = int(input("Enter population size: "))
-        total_iterations = int(input("Enter the number of iterations: "))
-        fitness_function = input("Fitness function: ").lower()
-
-        if fitness_function == "location":
-            locationX = int(input("Enter location x coordinate: "))
-            locationY = int(input("Enter location y coordinate: "))
-
-    else:
-        # Get existing simulation data
-        population_size = 1000
-        total_iterations = 100
-        fitness_function = "location"
-
-        if fitness_function == "location":
-            locationX = 50
-            locationY = 99
-
-        # Update simulationData
-
-    fitnessFunction = FitnessFunction(fitness_function)
-
-    if (fitness_function == "location"):
-        fitnessFunction.setLocation(locationX, locationY)
-
-    simulationData = SimulationData(total_iterations, fitnessFunction)
-
-    simulation = Simulation(population_size, total_iterations,
-                            fitnessFunction, simulationData)
-    simulation.start()
-    for i in range(1000):
-        simulation.updateIteration(i)
+#     if fitness_function == "location":
+#         locationX = int(input("Enter location x coordinate: "))
+#         locationY = int(input("Enter location y coordinate: "))
 
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+# else:
+#     # Get existing simulation data
+#     population_size = 10
+#     total_iterations = 2
+#     fitness_function = "location"
 
-# test()
+#     if fitness_function == "location":
+#         locationX = 50
+#         locationY = 99
 
-# ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+#     # Update simulationData
+
+# fitnessFunction = FitnessFunction(fitness_function)
+
+
+# if (fitness_function == "location"):
+#     fitnessFunction.setLocation(locationX, locationY)
+
+# simulationData = SimulationData(total_iterations, fitnessFunction)
+
+# simulation = Simulation(population_size, total_iterations,
+#                         fitnessFunction, simulationData)
+# simulation.start()
+# for i in range(100000):
+#     simulation.updateIteration(i)
 
 
 # # if newSimulation:
