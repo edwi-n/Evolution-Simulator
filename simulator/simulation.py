@@ -115,7 +115,7 @@ class Simulation:
             i.updateCoordinate(newCoord[0], newCoord[1])
             self.simulationData.updateMovement(i.id, newCoord[0], newCoord[1])
 
-        for i in range(self.gridSize):
+        for i in range(5):
             self.move()
             # os.system("cls")
             # self.displaySimulation()
