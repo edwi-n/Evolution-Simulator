@@ -22,4 +22,8 @@ Look at NEA specification...
 Revert grid size to 100x100 in app.py
 
 
-Update canvas as async for movement is not needed (too slow)
+To Do:
+
+Allow dynamic canvas size
+Saving sim --> database
+neural network

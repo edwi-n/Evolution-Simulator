@@ -82,20 +82,16 @@ def simulate():
     return render_template("simulation.html", data=data)
 
 
-@app.route("/test")
-def test():
-    data = {'test': 10, 'two': 2, "three": [2, 3]}
-    return render_template("test.html", data=data)
-
-
 @app.route("/get")
 def getNextIteration():
     global numberOfIterations, sim, simulationData, totalCount
     simulationData.clearMovement()
     simulationData.clearOrganisms()
-    sim.updateIteration(totalCount)
-    totalCount += 1
+    for i in range(1):
+        sim.updateIteration(totalCount)
+        totalCount += 1
     data = simulationData.getData()
+    # print(len(data["movement"]))
     return data
 
 
