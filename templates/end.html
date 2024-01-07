@@ -1,0 +1,64 @@
+<!-- FILEPATH: /c:/Users/Edwin/Desktop/Computer-Science-NEA/templates/end.html -->
+<!DOCTYPE html>
+<html>
+
+<head>
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+                    integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+                    crossorigin="anonymous">
+</head>
+
+<body>
+          <!-- Container for the content -->
+          <div class="d-flex flex-column min-vh-100 justify-content-center align-items-center">
+                    <!-- Heading -->
+                    <h1>End of Simulation</h1>
+                    <div class="row">
+                              <!-- Home button -->
+                              <input class="col btn btn-outline-secondary p-3" id="home" type="button" value="Home"
+                                        onclick="returnToHome()" />
+                              <!-- View Simulation Summary button -->
+                              <input class="col btn btn-outline-dark p-3" id="summary" type="button"
+                                        value="View Simulation Summary" onclick="viewSummary()" />
+
+                              <div class="w-100 mt-2"></div>
+                              <!-- Download Simulation button -->
+                              <input class="col btn btn-dark p-3" type="button" value="Download Simulation"
+                                        onclick="downloadSim()">
+
+                              <!-- Save in Database button -->
+                              <input class="col btn btn-secondary p-3" type="button" value="Save in Database"
+                                        onclick="saveInDB()">
+                    </div>
+          </div>
+
+</body>
+
+<script>
+          // Parse the JSON data
+          var data = JSON.parse('{{data | tojson | safe}}');
+          var uniqueId = data.id;
+
+          // Function to download the simulation
+          function downloadSim() {
+                    window.location = "/downloadSimulation/" + uniqueId;
+          }
+
+          // Function to save the simulation in the database
+          function saveInDB() {
+                    window.location = "/database/" + uniqueId;
+          }
+
+          // Function to return to the home page
+          function returnToHome() {
+                    window.location = "/";
+          }
+
+          // Function to view the simulation summary
+          function viewSummary() {
+                    window.location = "/summary/" + uniqueId;
+          }
+</script>
+
+</html>

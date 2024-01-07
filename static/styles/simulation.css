@@ -1,0 +1,16 @@
+#simulation-grid {
+  outline: black 2px solid;
+}
+
+.grid-container{
+  display:flex;
+}
+
+.grid-item{
+          margin-left: 1rem;
+          display:inline-block;
+}
+
+h3, .progress, #simulation-progress, #navigation-buttons{
+  margin-left: 1rem;
+}

@@ -1,29 +1,35 @@
-Only changeable settings will be speed
-
-Use JSON to send simulation data to client
-
-Simulation Data class should be able to read database and file and convert to JSON which contains data about the entire simulation
-(including organism genes, their movement, location and etc) this is then sent to the website and displayed.
-
-
-
-Simulation Data class's self.__data["organism"] will be an array of coordinates with genome. It can then be iterated through
-using the population size as it repeats every x times where x is the population size.
-
-
 Priority queue / data structures, maybe BFS?
-
-Use Set Iteration Data and Get Iteration Data
-
 
 Look at NEA specification...
 
 
-Revert grid size to 100x100 in app.py
+Implement merge sort?
 
+Linked list?
 
-To Do:
+Error Handling
 
-Allow dynamic canvas size
-Saving sim --> database
-neural network
+Simulation Summary -  fitness_score vs iteration
+
+Make genome in organism-info a hyperlink which graphically displays the genome?
+Same with the parents id
+
+Zoom in/zoom out
+
+Rewrite the tree code
+
+Rewrite the code which uses numpy
+
+Change the number of moves to lower variance
+
+Update database to take into account location coords
+
+Rename iteration to generation
+
+genome-decoder?
+
+change database structure
+
+Make a new class for global variables
+
+Initialise database and if there is an error, return 404 and show that database doesn't work to the user
