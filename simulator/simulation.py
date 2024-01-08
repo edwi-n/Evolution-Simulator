@@ -10,11 +10,10 @@ class Simulation:
     A class representing a simulation.
 
     Attributes:
+    - globalID (int): A counter for organism id.
     - populationSize (int): The size of the population in the simulation.
     - mutationRate (float): The probability of mutation after creating children.
     - fitnessFunction (object): The fitness function object used in the genetic algorithm.
-    - dataObject (object): The object used to store the simulation data.
-    - globalID (int): A counter for organism id.
     - organisms (list): The list of alive organisms in the simulation.
     - simulationData (object): The object used to store simulation data.
     - coordinates (dict): The dictionary storing the coordinates of alive organisms.
@@ -353,7 +352,6 @@ class Organism:
         id (int): The ID of the organism.
         xCoordinate (int): The x-coordinate of the organism's location.
         yCoordinate (int): The y-coordinate of the organism's location.
-        startCoord (list): The starting coordinates of the organism.
         genome (object): The genome object of the organism.
     """
 
@@ -370,7 +368,6 @@ class Organism:
         self.id = ID
         self.xCoordinate = xCoordinate
         self.yCoordinate = yCoordinate
-        self.startCoord = [xCoordinate, yCoordinate]
         self.genome = genomeObject
 
     def updateCoordinate(self, xCoordinate, yCoordinate):
@@ -512,23 +509,6 @@ class FitnessFunction:
         """
         self.__locationCoordinates = [xCoordinate, yCoordinate]
 
-    def getDistanceFromLocation(self, xCoordinate, yCoordinate):
-        """
-        Calculate the distance from the location coordinates to the given coordinates.
-
-        Args:
-            xCoordinate (float): The x-coordinate.
-            yCoordinate (float): The y-coordinate.
-
-        Returns:
-            float: The distance from the location coordinates to the given coordinates.
-        """
-
-        # Calculate the distance^2 using the distance formula (x2-x1)^2 + (y2-y1)^2.
-        distance = (xCoordinate - self.__locationCoordinates[0]) ** 2 + (
-            yCoordinate - self.__locationCoordinates[1]) ** 2
-        return distance
-
     def performFitnessFunction(self, organism):
         """
         Perform the fitness function calculation for the given organism.
@@ -539,7 +519,10 @@ class FitnessFunction:
         Returns:
             float: The fitness function value for the organism.
         """
-        return self.getDistanceFromLocation(organism.xCoordinate, organism.yCoordinate)
+        # Calculate the distance^2 using the distance formula (x2-x1)^2 + (y2-y1)^2.
+        distance = (organism.xCoordinate - self.__locationCoordinates[0]) ** 2 + (
+            organism.yCoordinate - self.__locationCoordinates[1]) ** 2
+        return distance
 
 
 class SimulationData:
@@ -800,22 +783,15 @@ class Database:
         # Creates a table for the genome
         connection.execute(f"""CREATE TABLE IF NOT EXISTS genome_{name}(
                             id integer PRIMARY KEY,
-                            a real,
-                            b real,
-                            c real,
-                            d real,
-                            e real,
-                            f real,
-                            g real,
-                            h real,
+                            genome text,
                             parent1 integer,
                             parent2 integer)
                            """)
         for organism in data["organisms"]:
-            values = str(organism[0])+","
+            values = str(organism[0])+",'"
             for i in range(8):
                 values += str(organism[1][i])+","
-            values += str(organism[2][0])+","+str(organism[2][1])
+            values += "'," + str(organism[2][0])+","+str(organism[2][1])
             try:
                 connection.execute(
                     f"INSERT INTO genome_{name} VALUES({values})")
@@ -885,15 +861,15 @@ class Database:
             data["location"] = [value[5], value[6]]
         rows = connection.execute(f"SELECT * FROM genome_{name}")
         data["organisms"] = []
-        # value is in the format (id, a, b, c, d, e, f, g, h, parent1, parent2)
+        # value is in the format (id, genome, parent1, parent2)
         for value in rows:
-            genes = []
-            # appends the genes (a, b, c, d, e, f, g, h) to the list
+            genes = value[1].split(',')
+            genome = []
             for i in range(8):
-                genes.append(value[i+1])
-            parents = [value[9], value[10]]
+                genome.append(float(genes[i]))
+            parents = [value[2], value[3]]
             # appends the organism in the format (id, genes, parents)
-            data["organisms"].append([value[0], genes, parents])
+            data["organisms"].append([value[0], genome, parents])
         rows = connection.execute(f"SELECT * FROM iteration_{name}")
         data["iterations"] = []
         # value is in the format (id, data)
