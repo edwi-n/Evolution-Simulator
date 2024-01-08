@@ -194,7 +194,7 @@ def dbSimulation():
 
             # Create a SimulationData object and upload the retrieved data
             simulationData = simulation.SimulationData(
-                int(data["iterationCount"]), int(data["populationSize"]))
+                int(data["iterationCount"]), int(data["populationSize"]), (data["location"][0], data["location"][1]))
             simulationData.uploadData(data)
 
             # Store the SimulationData object in a dictionary with a unique ID
@@ -483,12 +483,13 @@ def dbSave():
     global entireSimulationData
     # Parse the data from the request
     databaseInfo = request.json
-    simulationName = databaseInfo["name"]
-    simulationPassword = databaseInfo["password"]
-    isPrivate = databaseInfo["isPrivate"]
-    id = databaseInfo["uniqueId"]
-    # Check if the ID exists in the entireSimulationData dictionary
     try:
+        # Check if the required keys are present in the dictionary
+        simulationName = databaseInfo["name"]
+        simulationPassword = databaseInfo["password"]
+        isPrivate = databaseInfo["isPrivate"]
+        id = databaseInfo["uniqueId"]
+        # Check if the ID exists in the entireSimulationData dictionary
         entireSimulationData[id]
     except KeyError:
         return {"valid": False}

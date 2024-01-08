@@ -16,8 +16,6 @@ Same with the parents id
 
 Zoom in/zoom out
 
-Rewrite the tree code
-
 Rewrite the code which uses numpy
 
 Change the number of moves to lower variance
@@ -33,3 +31,7 @@ change database structure
 Make a new class for global variables
 
 Initialise database and if there is an error, return 404 and show that database doesn't work to the user
+
+Parallisation?
+
+Change genome to have -1 to 1 range

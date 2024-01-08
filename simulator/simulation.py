@@ -678,7 +678,9 @@ class Database:
                    password text,
                    public bool,
                    iterations integer,
-                   population integer)''')
+                   population integer,
+                   location_x integer,
+                   location_y integer)''')
             connection.commit()
             connection.close()
         except Error as e:
@@ -774,7 +776,7 @@ class Database:
             power = (power*127) % modulo
         return hash_value
 
-    def insertSimulation(self, name, password, public=1, data=None):
+    def insertSimulation(self, name, password, public, data):
         """
         Inserts a new simulation into the database.
 
@@ -789,9 +791,11 @@ class Database:
         hashedPassword = Database.hashPassword(self, password)
         iterationCount = data['iterationCount']
         size = data['populationSize']
+        location_x = data['location'][0]
+        location_y = data['location'][1]
 
         connection.execute(
-            f"INSERT INTO simulation VALUES ('{name}', '{hashedPassword}', {public}, {iterationCount}, {size})")
+            f"INSERT INTO simulation VALUES ('{name}', '{hashedPassword}', {public}, {iterationCount}, {size}, {location_x}, {location_y})")
 
         # Creates a table for the genome
         connection.execute(f"""CREATE TABLE IF NOT EXISTS genome_{name}(
@@ -878,6 +882,7 @@ class Database:
         for value in row:
             data["iterationCount"] = value[3]
             data["populationSize"] = value[4]
+            data["location"] = [value[5], value[6]]
         rows = connection.execute(f"SELECT * FROM genome_{name}")
         data["organisms"] = []
         # value is in the format (id, a, b, c, d, e, f, g, h, parent1, parent2)
