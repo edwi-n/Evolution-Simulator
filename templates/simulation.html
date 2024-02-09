@@ -1,0 +1,790 @@
+<!-- This HTML file represents page that displays the Evolution Simulator.-->
+<!DOCTYPE html>
+<html>
+
+<head>
+  <!-- Include Font Awesome CSS library (For Organism Icons) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+
+  <!-- Set the viewport for responsive design -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Include Bootstrap CSS library -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+    crossorigin="anonymous"></script>
+
+  <!-- Define custom CSS styles -->
+  <style>
+    /* Styles for the simulation grid */
+    #simulation-grid {
+      outline: black 2px solid;
+    }
+
+    /* Styles for the grid container */
+    .grid-container {
+      display: flex;
+    }
+
+    /* Styles for the grid items */
+    .grid-item {
+      margin-left: 1rem;
+      display: inline-block;
+    }
+
+    /* Styles for various elements */
+    h3,
+    .progress,
+    #simulation-progress,
+    #navigation-buttons {
+      margin-left: 1rem;
+    }
+
+    .nav-black {
+      color: black;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Simulation title -->
+  <h3 id="title">Evolution Simulator</h3>
+
+  <!-- Simulation main content -->
+  <div id="simulation-main">
+    <!-- Simulation screen -->
+    <div class="grid-container" id="simulation-screen">
+      <div>
+        <!-- Canvas for the simulation grid -->
+        <canvas class="grid-item" id="simulation-grid" width="800" height="800"></canvas>
+
+        <!-- Progress bar -->
+        <div class="progress" style="height: 10px">
+          <div class="progress-bar progress-bar-striped progress-bar-animated" id="progressBar" role="progressbar"
+            aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+      </div>
+
+      <!-- Canvas for the organism image -->
+      <div class="grid-item" id="canvas-image"></div>
+
+      <!-- Organism details -->
+      <div class="grid-item">
+        <div id="organism-image"></div>
+        <div id="organism-id">ID:</div>
+        <div id="organism-genome">Genome:</div>
+        <div id="organism-parents">Parents:</div>
+        <div>Ancestry Tree:</div>
+        <canvas id="organism-tree" width="500" height="600"></canvas>
+      </div>
+    </div>
+
+    <div id="simulation-bottom">
+      <!-- Simulation progress counter -->
+      <span id="simulation-progress"></span>
+
+      <!-- Simulation navigation buttons -->
+      <span id="simulation-navigation">
+        <button class="btn btn-light btn-sm" id="generationPrev" onclick="generationPrev()">
+          <i class="fas fa-fast-backward"></i>
+        </button>
+        <button class="btn btn-light btn-sm" id="generationPause" onclick="generationPause()">
+          <i id="generationPauseState" value="a" class="fa fa-pause"></i>
+        </button>
+        <button class="btn btn-light btn-sm" id="generationNext" onclick="generationNext()">
+          <i class="fas fa-fast-forward"></i>
+        </button>
+        <span class="slidercontainer">
+          <input type="range" min="1" max="100" value="50" id="slider" />
+          <span id="sliderValue">1x</span>
+        </span>
+        <button class="btn btn-light btn-sm" id="showHelpScreen">Help</button>
+      </span>
+    </div>
+  </div>
+
+  <!-- Navigation buttons -->
+  <div id="navigation-buttons">
+    <input class="btn btn-light btn-sm" id="end" type="button" value="End Simulation" onclick="checkEnd()" />
+    <input class="btn btn-light btn-sm" id="back" type="button" value="Back" onclick="goBack()" />
+  </div>
+
+  <!-- Help Dialog Screen -->
+  <dialog id="help-screen">
+    <form>
+      <div>
+        <div id="simulationHelp" class="carousel" data-bs-theme="dark">
+          <div class="carousel-inner">
+            <div class="carousel-item active">
+              <img src="{{url_for('static', filename='clip1.gif')}}" />
+            </div>
+            <div class="carousel-item">
+              <img src="{{url_for('static', filename='clip2.gif')}}" />
+            </div>
+            <div class="carousel-item">
+              <img src="{{url_for('static', filename='clip3.gif')}}" />
+            </div>
+            <div class="carousel-item">
+              <img src="{{url_for('static', filename='clip4.gif')}}" />
+            </div>
+          </div>
+          <button class="carousel-control-prev" type="button" data-bs-target="#simulationHelp" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+          </button>
+          <button class="carousel-control-next" type="button" data-bs-target="#simulationHelp" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+          </button>
+        </div>
+        <button class="btn btn-light mt-2" value="cancel" formmethod="dialog">Ok</button>
+      </div>
+    </form>
+  </dialog>
+</body>
+
+<!-- JavaScript code -->
+<script>
+  // Get the help button and the help dialog
+  const showHelpScreen = document.getElementById("showHelpScreen");
+  const helpScreen = document.getElementById("help-screen");
+
+  // Shows the simulation help dialog
+  showHelpScreen.addEventListener("click", () => {
+    helpScreen.showModal();
+  });
+
+  // Get the canvas element and its context
+  const canvas = document.getElementById("simulation-grid");
+  const ctx = canvas.getContext("2d");
+  const slider = document.getElementById("slider");
+
+  // Set the initial scale and font for the context
+  var scaleX = 0.8;
+  var scaleY = 0.8;
+  ctx.scale(scaleX, scaleY);
+  ctx.font = "9px FontAwesome";
+  ctx.strokeStyle = "black";
+
+  // Parse the data from the server
+  var data = JSON.parse('{{data | tojson | safe}}');
+
+  // Initialize global variables for simulation control
+  var generation = 0;
+  var step = 1;
+  var generationCount = data.generationCount;
+  var populationSize = data.populationSize;
+  var uniqueId = data.id;
+  var simulationType = data.simulationType;
+  var paused = false;
+  var genomes = {};
+  var parents = {};
+  var currGenome = 0;
+  var highlighted = {};
+
+  // Initialize arrays for storing organisms and genomes
+  data.organismsInGeneration = [[]];
+  for (let i = 0; i < generationCount; i++) {
+    data.organismsInGeneration.push([]);
+  }
+  if (simulationType == 1) {
+    data.generations = [[]];
+    for (let i = 0; i < generationCount; i++) {
+      data.generations.push([]);
+    }
+    document.getElementById("generationPrev").style.display = "none";
+    document.getElementById("generationNext").style.display = "none";
+  }
+
+
+  // Initialize the locations array (used to keep track of organisms on the grid)
+  const locations = new Array(101)
+    .fill(-1)
+    .map(() => new Array(101).fill(-1));
+
+  // Set the simulation speed
+  var simulationSpeed = 2;
+
+  // Set the initial background colour of the canvas
+  ctx.fillStyle = "white";
+  ctx.fillRect(0, 0, 1000, 1000);
+
+  // Fetch data from the server and start the simulation loop if simulation type is 1 (new simulation)
+  if (simulationType == 1) {
+    // Request the first generation from the server
+    chain = fetch("/get/" + uniqueId)
+      .then((response) => {
+        return response.json();
+      })
+      .then((dat) => {
+        // Concatenate the data from the server with the data from the client
+        data.generations[0] = data.movement.concat(dat.movement);
+        data.organisms = data.organisms.concat(dat.organisms);
+        // Perform the main simulation loop
+        return loop();
+      });
+
+    // Fetch the rest of the generations from the server
+    for (let i = 1; i < generationCount; i++) {
+      // Promise chain to fetch the next generation from the server
+      chain = chain
+        .then((a) => {
+          return fetch("/get/" + uniqueId);
+        })
+        .then((response) => {
+          return response.json();
+        })
+        .then((dat) => {
+          // Continue concatenating the data from the server with the data from the client
+          // Eventually all the data will be stored in the data object
+          data.generations[i] = dat.movement;
+          data.organisms = data.organisms.concat(dat.organisms);
+          // Perform the main simulation loop
+          return loop();
+        });
+    }
+    chain.then(() => {
+      // Disable the navigation buttons when the simulation ends
+      document.getElementById("simulation-navigation").innerHTML = "";
+    });
+  } else {
+    // Perform the main simulation loop if simulation type is 0 (existing simulation)
+    oldSimLoop().then(() => {
+      // Disable the navigation buttons when the simulation ends
+      document.getElementById("simulation-navigation").innerHTML = "";
+    });
+  }
+
+  // Event listener for the slider input, used to change the simulation speed
+  slider.oninput = function () {
+    simulationSpeed = 2 / (this.value / 50);
+    document.getElementById("sliderValue").innerHTML = this.value / 50 + "x";
+  };
+
+  // Function to get the cursor position on the canvas
+  function getCursorPosition(canvas, event) {
+    const rect = canvas.getBoundingClientRect();
+    // Gets the cursor position on relative to the canvas
+    const x = Math.floor((event.clientX - rect.left) / (10 * scaleX));
+    const y = Math.floor((event.clientY - rect.top) / (10 * scaleY));
+    return [x, y];
+  }
+
+  // Function to convert a number to a hexadecimal string
+  function convertNumberToHex(number) {
+    hex = number.toString(16);
+    if (hex.length == 1) {
+      return "0" + hex;
+    } else {
+      return hex;
+    }
+  }
+
+  // Event listener for the canvas mousedown event
+  canvas.addEventListener("mousedown", function (e) {
+    // Gets the cursor position on the canvas
+    position = getCursorPosition(canvas, e);
+    x = position[0];
+    y = position[1];
+    let organismId = -1;
+    // Check if the cursor is within the canvas
+    if (x >= 0 && y >= 0 && x <= 100 && y <= 100) {
+      // Get the organism ID at the cursor position
+      // The id is -1 if there is no organism at the cursor position
+      organismId = locations[x][y];
+    }
+    if (organismId != -1) {
+      // Remove previous highlighted organisms
+      for (let id in highlighted) {
+        if (id in prev) {
+          // Converts the organism's genome into a colour code
+          var red = genomes[id][0] + genomes[id][1] + genomes[id][2];
+          var green = genomes[id][3] + genomes[id][4] + genomes[id][5];
+          var blue = genomes[id][6] + genomes[id][7];
+          ctx.fillStyle = `rgb(
+              ${Math.floor(255 - 60 * red)},
+              ${Math.floor(255 - 60 * green)},
+              ${Math.floor(255 - 100 * blue)}`;
+          // Draw the organism at its previous position with its original colour
+          ctx.fillText(
+            "\uf7fa",
+            prev[id][0] * 10 + 1,
+            (prev[id][1] + 1) * 10 - 2,
+            8
+          );
+        }
+      }
+      highlighted = {};
+      highlighted[organismId] = true;
+      // Highlight the selected organism, highlighting makes the organism colour black
+      ctx.fillStyle = `rgb(
+        ${0},
+        ${0},
+        ${0}`;
+      // Draw the organism at its current position with its highlighted colour
+      ctx.fillText("\uf7fa", x * 10 + 1, (y + 1) * 10 - 2, 8);
+      //  data.organisms[organismId] = [organismId, genomes[organismId], organismParents];
+      let organismParents = parents[organismId];
+      shortGenome = [];
+      // Get the genome of the organism and round the values to 1 decimal place
+      for (let i = 0; i < 8; i++) {
+        shortGenome.push(genomes[organismId][i].toFixed(1));
+      }
+      // Converts the organism's genome into a colour code
+      var red =
+        genomes[organismId][0] +
+        genomes[organismId][1] +
+        genomes[organismId][2];
+      var green =
+        genomes[organismId][3] +
+        genomes[organismId][4] +
+        genomes[organismId][5];
+      var blue = genomes[organismId][6] + genomes[organismId][7];
+      // Converts the decimal values into hexadecimal values
+      var rgb =
+        convertNumberToHex(Math.floor(255 - 60 * red)) +
+        convertNumberToHex(Math.floor(255 - 60 * green)) +
+        convertNumberToHex(Math.floor(255 - 100 * blue));
+      // Make a tree data structure with the organism as the root node
+      root = makeTree(organismId);
+      // Draw the ancestry tree on the canvas
+      const organismTree = document.getElementById("organism-tree");
+      const treeCtx = organismTree.getContext("2d");
+      treeCtx.clearRect(0, 0, organismTree.width, organismTree.height);
+      var height = treeHeight(root);
+      drawNode(root, 0, 0, height);
+      // Update organism details in the UI
+
+      // Display the organism's image (enlarged version of the organism icon)
+      document.getElementById("organism-image").innerHTML =
+        '<i id="icon" class="fa-solid fa-disease fa-spin fa-5x" style="color: #' +
+        rgb +
+        ';"></i>';
+      // Display the organism's ID, genome and parents
+      document.getElementById("organism-id").innerHTML = "ID: " + organismId;
+      document.getElementById("organism-genome").innerHTML =
+        "Genome: " + shortGenome;
+
+      if (organismParents[0] == -1 || organismParents[1] == -1) {
+        document.getElementById("organism-parents").innerHTML =
+          "Parents: N/A";
+      } else {
+        document.getElementById("organism-parents").innerHTML =
+          "Parents: " + organismParents;
+      }
+    } else {
+      // Clear organism details in the UI
+      document.getElementById("organism-id").innerHTML = "ID:";
+      document.getElementById("organism-genome").innerHTML = "Genome:";
+      document.getElementById("organism-parents").innerHTML = "Parents:";
+      document.getElementById("organism-image").innerHTML = "";
+      const organismTree = document.getElementById("organism-tree");
+      const treeCtx = organismTree.getContext("2d");
+      // Clear the tree canvas
+      treeCtx.clearRect(0, 0, organismTree.width, organismTree.height);
+    }
+  });
+
+  // Function to reset the locations array
+  function resetLocations() {
+    for (let i = 0; i < 101; i++) {
+      for (let j = 0; j < 101; j++) {
+        locations[i][j] = -1;
+      }
+    }
+  }
+
+  // Function to update the simulation data on the server and redirect to the end page
+  // when the user clicks the End Simulation button
+  function checkEnd() {
+    // If the current generation is not empty, increment the generation counter by 1
+    // This is to account for the last generation which should always empty
+    if (generation < data.generations.length) {
+      if (data.generations[generation].length != 0) {
+        generation += 1;
+      }
+    }
+    data.generationCount = generation;
+    paused = true;
+    // Converts the data object into a JSON string
+    var dataToSend = JSON.stringify(data);
+    // Send the entire data object to the server
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/updateEntireData/" + uniqueId);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    finalData = JSON.stringify(dataToSend);
+    xhr.send(finalData);
+    xhr.onreadystatechange = function () {
+      // Redirect to the end page when the server responds with a status code of 200
+      window.location = "/end/" + uniqueId;
+    };
+  }
+
+  // Function to go back to the previous page
+  function goBack() {
+    if (simulationType == 1) {
+      window.location = "/start";
+    } else {
+      window.location = "/open";
+    }
+  }
+
+  // Main simulation loop
+
+  // Asynchronous function that represents the main simulation loop
+  async function loop() {
+    resetLocations(); // Reset the locations array
+    prev = {}; // Clear the previous organism positions
+    ctx.fillStyle = "white"; // Set the canvas background colour to white
+    ctx.fillRect(0, 0, 1000, 1000); // Clear the canvas by filling it with white
+    while (currGenome < data.organisms.length) {
+      genomes[data.organisms[currGenome][0]] = data.organisms[currGenome][1]; // Update the genomes array
+      parents[data.organisms[currGenome][0]] = data.organisms[currGenome][2]; // Update the parents array
+      currGenome += 1; // Move to the next genome
+    }
+    // Get the total number of steps in the current generation
+    let totalSteps = data.generations[generation].length;
+    // data.generations[generation][step] = [organismId, [x, y]]
+    for (step = 1; step < totalSteps; step++) {
+      if (paused) {
+        // Pause the loop for 10 milliseconds
+        await new Promise((r) => setTimeout(r, 10));
+        step--; // Decrement the step counter to repeat the current step
+        continue;
+      }
+      if (
+        step % Math.ceil(populationSize / simulationSpeed) == 0 ||
+        step == totalSteps - 1
+      ) {
+        // Update the progress bar
+        document.getElementById("progressBar").style.width =
+          ((totalSteps * generation + step) / (totalSteps * generationCount)) *
+          100 +
+          "%";
+        // Convert the canvas to an image and resize it to 100x100 pixels and display it (minimap overview)
+        var image = new Image();
+        image.id = "pic";
+        image.src = canvas.toDataURL();
+        image.height = 100;
+        image.width = 100;
+        document.getElementById("canvas-image").innerHTML = "";
+        // Display's the image on the top right corner of the screen
+        document.getElementById("canvas-image").appendChild(image);
+        // Pause the loop for 10 milliseconds, this will in turn display all the movements of the organisms
+        await new Promise((r) => setTimeout(r, 1));
+      }
+      ctx.fillStyle = "white";
+      // Get the ID of the current organism
+      let organismId = data.generations[generation][step][0];
+      // Get the X coordinate of the current organism
+      let organismX = data.generations[generation][step][1][1];
+      // Get the Y coordinate of the current organism
+      let organismY = data.generations[generation][step][1][0];
+      // Get the parents of the current organism
+      let organismParents = parents[organismId];
+      // Check if the organism is already on the canvas
+      if (organismId in prev) {
+        // Clear the previous position of the organism on the canvas
+        ctx.fillRect(
+          prev[organismId][0] * 10,
+          prev[organismId][1] * 10,
+          10,
+          10
+        );
+        // Update the locations array to -1 (no organism at the position)
+        locations[prev[organismId][0]][prev[organismId][1]] = -1;
+      } else {
+        // Add the organism ID to the organismsInGeneration array
+        // (used to keep track of organisms in each generation)
+        data.organismsInGeneration[generation].push(organismId);
+      }
+      // Converts the organism's genome into a colour code
+      var red =
+        genomes[organismId][0] +
+        genomes[organismId][1] +
+        genomes[organismId][2];
+      var green =
+        genomes[organismId][3] +
+        genomes[organismId][4] +
+        genomes[organismId][5];
+      var blue = genomes[organismId][6] + genomes[organismId][7];
+      ctx.fillStyle = `rgb(
+        ${Math.floor(255 - 60 * red)},
+        ${Math.floor(255 - 60 * green)},
+        ${Math.floor(255 - 100 * blue)}`;
+      if (
+        highlighted[organismId]
+      ) {
+        // Check if the organism or its parents are highlighted, if so, highlight the organism
+        ctx.fillStyle = `rgb(
+          ${0},
+          ${0},
+          ${0}`;
+        highlighted[organismId] = true; // Mark the organism as highlighted
+      }
+      // Draw the organism at its current position
+      ctx.fillText("\uf7fa", organismX * 10 + 1, (organismY + 1) * 10 - 2, 8);
+      // Update the locations array
+      locations[organismX][organismY] = organismId;
+      // Update the previous organism position
+      prev[organismId] = [organismX, organismY];
+      // Update the simulation progress counter
+      document.getElementById("simulation-progress").innerHTML =
+        generation + 1 + " / " + data.generationCount;
+    }
+    // Move to the next generation
+    generation += 1;
+  }
+
+  // Asynchronous function that represents the loop for the old simulation type
+  async function oldSimLoop() {
+    while (generation < generationCount) {
+      await loop();
+    }
+  }
+
+
+  // Function to go to the previous generation
+  function generationPrev() {
+    if (simulationType != 1) {
+      // Check if the current generation is not the first generation
+      if (generation > 0) {
+        // Change the generation counter and reset the step counter and reset the canvas
+        generation -= 1;
+        step = 1;
+        prev = {};
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, 1000, 1000);
+        // Update the progress counter
+        document.getElementById("simulation-progress").innerHTML =
+          generation + 1 + " / " + data.generationCount;
+        // Update the progress bar
+        document.getElementById("progressBar").style.width =
+          ((data.generations[generation].length * generation) /
+            (data.generations[generation].length * generationCount)) *
+          100 +
+          "%";
+      }
+    }
+  }
+
+  // Function to pause or resume the simulation
+  function generationPause() {
+    paused = !paused;
+    if (paused) {
+      // Change the pause button to a play button
+      document.getElementById("generationPause").innerHTML =
+        '<i id="generationPauseState" value="a" class="fa fa-play"></i>';
+    } else {
+      // Change the play button to a pause button
+      document.getElementById("generationPause").innerHTML =
+        '<i id="generationPauseState" value="a" class="fa fa-pause"></i>';
+    }
+  }
+
+  // Function to go to the next generation
+  function generationNext() {
+    if (simulationType != 1) {
+      // Check if the current generation is not the last generation
+      if (generation < generationCount - 1) {
+        // Change the generation counter and reset the step counter and reset the canvas
+        generation += 1;
+        step = 1;
+        prev = {};
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, 1000, 1000);
+        // Update the progress counter
+        document.getElementById("simulation-progress").innerHTML =
+          generation + 1 + " / " + data.generationCount;
+        // Update the progress bar
+        document.getElementById("progressBar").style.width =
+          ((data.generations[generation].length * generation) /
+            (data.generations[generation].length * generationCount)) *
+          100 +
+          "%";
+      }
+    }
+  }
+
+  // Represents a node in the tree
+  class Node {
+    constructor(data, left, right) {
+      if (left == void 0) {
+        left = null;
+      }
+      if (right == void 0) {
+        right = null;
+      }
+      // The organism ID
+      this.data = data;
+      // Parent 1 node
+      this.left = left;
+      // Parent 2 node
+      this.right = right;
+    }
+  }
+
+  /**
+   * Creates a tree (with maximum depth 5) with the organism ID as the root node.
+   * parameters:
+   *    {integer} organismId - The ID of the organism.
+   *    {integer} depth - The depth of the tree (optional, default is 1).
+   * returns
+   *    {Node} - The root node of the tree.
+   */
+  function makeTree(organismId, depth) {
+    // Check if the depth is not specified
+    if (depth == void 0) {
+      depth = 1;
+    }
+    // Get the parents of the organism
+    let organismParents = parents[organismId];
+    // Check if the organism has no parents or if the depth is 5 (base case)
+    if (organismParents[0] == -1 || organismParents[1] == -1 || depth == 5) {
+      // Return a node with no children (leaf node) with the organism ID as the data
+      return new Node(organismId);
+    } else {
+      // Create a new node with the organism ID as the data.
+      // Recursively call the function to create the left and right children of the node
+      // The children of the node represent the parents of the organism
+      return new Node(
+        organismId,
+        new makeTree(organismParents[0], depth + 1),
+        new makeTree(organismParents[1], depth + 1)
+      );
+    }
+  }
+
+  /**
+   * Calculates the height of the tree.
+   * parameters:
+   *    {Node} root - The root node of the tree.
+   *    {integer} depth - The current depth of the node (optional, default is 0).
+   * returns:
+   *    {integer} - The height of the tree.
+   */
+  function treeHeight(root, depth) {
+    if (depth == void 0) {
+      depth = 0;
+    }
+    var left = root.left;
+    var right = root.right;
+    var depthLeft = depth;
+    var depthRight = depth;
+    if (left != null) {
+      depthLeft = treeHeight(left, depth + 1);
+    }
+    if (right != null) {
+      depthRight = treeHeight(right, depth + 1);
+    }
+    return Math.max(depthLeft, depthRight);
+  }
+
+  /**
+     * Draws the given node on the canvas.
+     * parameters:
+     *    {Node} node - The node to be drawn.
+     *    {number} xDepth - The x-depth of the node.
+     *    {number} yDepth - The y-depth of the node.
+     *    {number} treeHeight - The height of the tree.
+     */
+  function drawNode(node, xDepth, yDepth, treeHeight) {
+    // Calculate the font size of the node (the font size decreases as the depth increases
+    // because the number of nodes increases exponentially as the depth increases)
+    var font_size = 60 / (1.2 * (yDepth + 1));
+    var canvas = document.getElementById("organism-tree");
+    var ctx = canvas.getContext("2d");
+    var width = canvas.getBoundingClientRect().width;
+    var height = canvas.getBoundingClientRect().height;
+    // Calculate the width and height of each quadrant
+    var quadrantWidth = width / Math.pow(2, yDepth);
+    // Calculate the height of the quadrant based on the current depth and the height of the tree
+    var levelHeight = 1;
+    if (treeHeight > 0) {
+      levelHeight = height / treeHeight;
+    }
+    var quadrantHeight = yDepth * levelHeight;
+    // Calculate the x and y coordinates of the node
+    var x = quadrantWidth * xDepth + quadrantWidth / 2;
+    var y = quadrantHeight / 2 + font_size;
+    ctx.font = font_size + "px serif";
+    // Draw the node id on the canvas
+    ctx.fillText(node.data, x, y);
+    // Check if the node has a left child
+    if (node.left) {
+      // Draw a line connecting the node to its left child
+      drawLineLeftChild(ctx, x, y, quadrantWidth, levelHeight, font_size);
+      // Recursively call the function to draw another tree with the left child as the root node
+      drawNode(node.left, 2 * xDepth, yDepth + 1, treeHeight);
+    }
+    // Check if the node has a right child
+    if (node.right) {
+      // Reset the font size of the node
+      font_size = 60 / (1.2 * (yDepth + 1));
+      // Draw a line connecting the node to its right child
+      drawLineRightChild(ctx, x, y, quadrantWidth, levelHeight, font_size);
+      // Recursively call the function to draw another tree with the right child as the root node
+      drawNode(node.right, 2 * xDepth + 1, yDepth + 1, treeHeight);
+    }
+  }
+
+  /**
+   * Draws a line connecting the node to its left child.
+   * paremeters:
+   *    {CanvasRenderingContext2D} ctx - The context of the canvas to draw the line.
+   *    {number} x - The x-coordinate of the node.
+   *    {number} y - The y-coordinate of the node.
+   *    {number} quadrantWidth - The width of the quadrant.
+   *    {number} levelHeight - The height of each level.
+   *    {number} font_size - The font size of the node.
+   */
+  function drawLineLeftChild(
+    ctx,
+    x,
+    y,
+    quadrantWidth,
+    levelHeight,
+    font_size
+  ) {
+    x += 10;
+    // Draw a line from the node to its left child
+    ctx.beginPath();
+    ctx.moveTo(x, y + 10);
+    // The line is drawn to the middle of the quadrant
+    ctx.lineTo(x - quadrantWidth / 4, y + levelHeight / 2 - font_size);
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  /**
+   * Draws a line connecting the node to its right child.
+   * paremeters:
+   *    {CanvasRenderingContext2D} ctx - The 2D rendering context of the canvas.
+   *    {number} x - The x-coordinate of the node.
+   *    {number} y - The y-coordinate of the node.
+   *    {number} quadrantWidth - The width of the quadrant.
+   *    {number} levelHeight - The height of each level.
+   *    {number} font_size - The font size of the node.
+   */
+  function drawLineRightChild(
+    ctx,
+    x,
+    y,
+    quadrantWidth,
+    levelHeight,
+    font_size
+  ) {
+    x += 10;
+    // Draw a line from the node to its right child
+    ctx.beginPath();
+    ctx.moveTo(x, y + 10);
+    // The line is drawn to the middle of the quadrant
+    ctx.lineTo(x + 1 + quadrantWidth / 4, y + levelHeight / 2 - font_size);
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+</script>
+
+</html>

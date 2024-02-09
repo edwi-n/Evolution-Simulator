@@ -1,0 +1,118 @@
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+		integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+		crossorigin="anonymous">
+</head>
+
+<div class="d-flex flex-column min-vh-100 justify-content-center align-items-center">
+	<h1>New Simulation</h1>
+
+	<!-- Display error messages -->
+	<div class="alert alert-danger" id="error"></div>
+
+	<!-- Form for input fields -->
+	<form class="justify-content-center" method="POST" action="/start">
+		<div>
+			<!-- Population Size input field -->
+			<div class="form-group row justify-content-center">
+				<label class="col-form-label col-sm-10">Population Size (1-1000):</label>
+				<div class="col-sm-10">
+					<input id="size" class="form-control" type="text" name="size"
+						required>
+				</div>
+			</div>
+
+			<!-- Number of generations input field -->
+			<div class="form-group row justify-content-center">
+				<label class="col-form-label col-sm-10">Number of generations (1-100):</label>
+				<div class="col-sm-10">
+					<input id="generation" class="form-control" type="text"
+						name="generation" required>
+				</div>
+			</div>
+
+			<!-- Mutation Probability input field -->
+			<div class="form-group row justify-content-center">
+				<label class="col-form-label col-sm-10">Mutation Probability (0%-100%):</label>
+				<div class="col-sm-10">
+					<input id="mutation" class="form-control" type="text" name="mutation"
+						required>
+				</div>
+			</div>
+
+			<!-- Location select field -->
+			<div class="form-group row justify-content-center">
+				<label class="col-form-label col-sm-10">Location:</label>
+				<div class="col-sm-10">
+					<select class="form-select" name="locationtype" id="locationtype"
+						required>
+						<option value="north" name="north">North</option>
+						<option value="ne" name="ne">North East</option>
+						<option value="east" name="east">East</option>
+						<option value="se" name="se">South East</option>
+						<option value="south" name="south">South</option>
+						<option value="sw" name="sw">South West</option>
+						<option value="west" name="west">West</option>
+						<option value="nw" name="nw">North West</option>
+					</select>
+				</div>
+			</div>
+
+			<!-- Submit button -->
+			<div class="form-group row justify-content-center">
+				<div class="col-sm-10">
+					<input class="form-control btn btn-outline-dark mt-3" type="submit"
+						value="Submit">
+				</div>
+			</div>
+		</div>
+	</form>
+
+	<!-- Back button -->
+	<div class="row justify-content-center">
+		<form class="col-sm-10" action="/">
+			<input class="btn btn-light mt-5" type="submit" value="Back">
+		</form>
+	</div>
+</div>
+
+<script>
+	var data = JSON.parse('{{data | tojson | safe}}')
+
+	// Check if the data object is not empty
+	if (Object.keys(data).length != 0) {
+		// Split the error message into an array of individual error messages
+		error = data.error.split(".")
+
+		// Set the value of the "size" form field if the size property of the data object is not -1
+		if (data.size != -1) {
+			document.getElementById("size").value = data.size
+		}
+
+		// Set the value of the "generation" form field if the generationCount property of the data object is not -1
+		if (data.generationCount != -1) {
+			document.getElementById("generation").value = data.generationCount
+		}
+
+		// Set the value of the "locationtype" form field based on the location property of the data object
+		document.getElementById("locationtype").value = data.location
+
+		// Set the value of the "mutation" form field if the mutationRate property of the data object is not -1
+		if (data.mutationRate != -1) {
+			document.getElementById("mutation").value = data.mutationRate
+		}
+
+		// Generate an HTML list of error messages and set it as the content of the "error" element
+		if (error != "") {
+			output = ""
+			for (let i = 0; i < error.length - 1; i++) {
+				output += '<li>' + error[i] + "</li>"
+			}
+			document.getElementById("error").innerHTML = output
+		}
+	} else {
+		// Hide the "error" element if the data object is empty
+		document.getElementById("error").style.display = "none"
+	}
+</script>

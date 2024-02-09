@@ -1,0 +1,190 @@
+<head>
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+                    integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+                    crossorigin="anonymous">
+</head>
+
+<body>
+          <!-- Form for saving simulation in the database -->
+          <div class="d-flex flex-column min-vh-100 justify-content-center align-items-center">
+                    <h1>Save Simulation in Database</h1>
+
+                    <form class="justify-content-center" id="databaseInfo">
+                              <div>
+                                        <!-- Hidden input field for storing the unique ID -->
+                                        <input class="form-group row justify-content-center" id="unique" name="uniqueId"
+                                                  value="" style="display:none;">
+                                        <div class="form-group row justify-content-center">
+                                                  <label class="col-form-label col-sm-10">
+                                                            Simulation Name:</label>
+                                                  <div class="col-sm-10">
+                                                            <input class="form-control" id="simulationName"
+                                                                      name="simulationName" type="text">
+                                                  </div>
+                                        </div>
+                                        <div class="form-group row justify-content-center">
+                                                  <label class="col-form-label col-sm-10">Password:</label>
+                                                  <div class="col-sm-10">
+                                                            <input class="form-control" id="simulationPassword"
+                                                                      name="simulationPassword" type="password">
+                                                  </div>
+                                        </div>
+                                        <div class="form-group row justify-content-center">
+                                                  <div class="col-sm-10 mt-2">
+                                                            <input class="form-check-input" id="private" name="private"
+                                                                      type="checkbox" value="1">
+                                                            <label class="form-check-label">Private</label>
+                                                  </div>
+                                        </div>
+
+                                        <div class="form-group row justify-content-center">
+                                                  <div class="col-sm-10">
+                                                            <input class="form-control btn btn-outline-dark mt-3"
+                                                                      type="submit" value="Submit">
+                                                  </div>
+                                        </div>
+                    </form>
+
+                    <!-- Button for going back -->
+                    <div class="row justify-content-center">
+                              <div class="col-sm-10 mt-4">
+                                        <input class="btn btn-light" type="submit" value="Back" onclick="back()">
+                              </div>
+                    </div>
+
+                    <!-- A modal dialog containing a form -->
+                    <dialog id="override-simulation">
+                              <h3>Simulation Already Exists</h3>
+                              <p>Enter the password for the existing simulation to override.</p>
+                              <form id="override-form">
+                                        <div class="form-group row justify-content-center">
+                                                  <label class="col-form-label col-sm-10">Password:</label>
+                                                  <div class="col-sm-10">
+                                                            <input id="override-password" class="form-control"
+                                                                      name="simulationPassword" type="password">
+                                                  </div>
+
+                                                  <div class="form-group row justify-content-center">
+                                                            <div class="col-sm-10">
+                                                                      <input id="override-submit"
+                                                                                class="form-control btn btn-outline-dark mt-3"
+                                                                                type="submit" value="Submit">
+                                                            </div>
+                                                  </div>
+                                        </div>
+                              </form>
+                              <button class="btn btn-outline-dark" id="override-cancel">Cancel</button>
+                    </dialog>
+</body>
+
+<script>
+          // Parse the data from the server
+          var data = JSON.parse('{{data | tojson | safe}}');
+          var uniqueId = data.id;
+          var simulationName = "";
+          var simulationPassword = "";
+          var isPrivate = false;
+          document.getElementById("unique").value = uniqueId;
+
+          // Function for going back
+          function back() {
+                    window.location = "/end/" + uniqueId;
+          }
+
+          // Add event listener for form submission
+          var form = document.getElementById("databaseInfo");
+          form.addEventListener("submit", validateSubmit);
+
+          function validateSubmit(event) {
+                    event.preventDefault();
+                    simulationName = document.getElementById("simulationName").value;
+                    simulationPassword = document.getElementById("simulationPassword").value;
+                    isPrivate = document.getElementById("private").checked;
+
+                    // Check if the simulation name already exists in the database
+                    fetch("/checkSimulation/" + simulationName).then((response) => {
+                              return response.json();
+                    }).then((result) => {
+                              if (result.valid == true) {
+                                        // Prompt for password if simulation already exists
+                                        overrideDialog.showModal();
+                              } else {
+                                        // Save the simulation in the database
+                                        var dataToSend = { "name": simulationName, "password": simulationPassword, "isPrivate": isPrivate, "uniqueId": uniqueId };
+                                        const xhr = new XMLHttpRequest();
+                                        xhr.open("POST", "/dbsave");
+                                        xhr.setRequestHeader("Content-Type", "application/json");
+                                        finalData = JSON.stringify(dataToSend);
+                                        xhr.send(finalData);
+                                        xhr.onreadystatechange = function () {
+                                                  if (xhr.readyState == 4 && xhr.status == 200) {
+                                                            let json = JSON.parse(xhr.responseText);
+                                                            if (json.valid) {
+                                                                      alert("Successfully saved in database.");
+                                                                      location.reload();
+                                                            } else {
+                                                                      alert("An error has occurred. Please try again later.");
+                                                                      location.reload();
+                                                            }
+                                                  }
+                                        }
+                                        return true;
+                              }
+                    });
+          }
+
+          const overrideDialog = document.getElementById("override-simulation");
+          const overrideSubmit = document.getElementById("override-submit");
+          const overrideForm = document.getElementById("override-form");
+          const overrideCancel = document.getElementById("override-cancel");
+
+          overrideCancel.addEventListener("click", (event) => {
+                    event.preventDefault();
+                    overrideDialog.close();
+          })
+
+          // Shows a dialog box when the user tries to save a simulation that already exists
+          overrideForm.addEventListener("submit", (event) => {
+                    event.preventDefault();
+                    overrideDialog.close();
+                    let password = document.getElementById("override-password").value;
+                    document.getElementById("override-password").value = "";
+                    var dataToSend = { "name": simulationName, "password": password };
+                    const xhr = new XMLHttpRequest();
+                    xhr.open("POST", "/verifyPassword");
+                    xhr.setRequestHeader("Content-Type", "application/json");
+                    finalData = JSON.stringify(dataToSend);
+                    xhr.send(finalData);
+                    xhr.onreadystatechange = function () {
+                              if (xhr.readyState == 4 && xhr.status == 200) {
+                                        let json = JSON.parse(xhr.responseText);
+                                        let valid = json.valid;
+                                        if (valid) {
+                                                  // Save the simulation in the database
+                                                  dataToSend = { "name": simulationName, "password": simulationPassword, "isPrivate": isPrivate, "uniqueId": uniqueId };
+                                                  const newReq = new XMLHttpRequest();
+                                                  newReq.open("POST", "/dbsave");
+                                                  newReq.setRequestHeader("Content-Type", "application/json");
+                                                  finalData = JSON.stringify(dataToSend);
+                                                  newReq.send(finalData);
+                                                  newReq.onreadystatechange = function () {
+                                                            if (newReq.readyState == 4 && newReq.status == 200) {
+                                                                      json = JSON.parse(newReq.responseText);
+                                                                      if (json.valid) {
+                                                                                alert("Successfully updated simulation.");
+                                                                                location.reload();
+                                                                      } else {
+
+                                                                                alert("An error has occurred. Please try again later.");
+                                                                      }
+                                                            }
+                                                  }
+                                        } else {
+
+                                                  alert("Incorrect password.");
+                                        }
+                              }
+                    }
+          })
+</script>
