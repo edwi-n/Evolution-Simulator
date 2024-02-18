@@ -68,6 +68,45 @@ class Simulation:
                 return i
         return -1
 
+    def mergeSort(self, organisms):
+        if (len(organisms) <= 1):
+            return organisms
+
+        # Split the list of organisms into two halves
+        mid = len(organisms)//2
+
+        left = organisms[:mid]
+        right = organisms[mid:]
+
+        # Recursively sort the two halves
+        return self.merge(self.mergeSort(left), self.mergeSort(right))
+
+    def merge(self, left, right):
+        final_list = []
+        left_index = 0
+        right_index = 0
+
+        while (left_index < len(left) and right_index < len(right)):
+            # Compare the fitness function scores of the organisms
+            if (left[left_index][0] < right[right_index][0]):
+                final_list.append(left[left_index])
+                left_index += 1
+            else:
+                final_list.append(right[right_index])
+                right_index += 1
+
+        #  Add the remaining elements of the left list
+        while (left_index < len(left)):
+            final_list.append(left[left_index])
+            left_index += 1
+
+        #  Add the remaining elements of the right list
+        while (right_index < len(right)):
+            final_list.append(right[right_index])
+            right_index += 1
+
+        return final_list
+
     def geneticAlgorithm(self):
         """
         Performs the genetic algorithm for reproduction and selection of organisms.
@@ -88,7 +127,7 @@ class Simulation:
                 [self.fitnessFunction.performFitnessFunction(i), i.id])
 
         # Selection
-        selectionProcess = sorted(selectionProcess)
+        selectionProcess = self.mergeSort(selectionProcess)
 
         # Reproduction
         newOrganisms = []
