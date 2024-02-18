@@ -843,8 +843,6 @@ class Database:
                             data text)
                            """)
 
-        index = 0
-        done = False
         # Iterates through each generation
         for i in range(data["generationCount"]):
             # Checks if the generation is empty
