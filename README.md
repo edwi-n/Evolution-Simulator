@@ -1,18 +1,35 @@
 # Evolution Simulator
 
-[http://evolutionsimulator.northcentralus.cloudapp.azure.com:5000/](url)
+The evolution simulator is an interactive program which displays evolution taking place. Organisms are represented as nodes which evolve over time. Each organism is initially created with a unique set of genes which determines its movement. Organisms only survive if they reach a target location (chosen by the user). The surviving organisms are then used to create children (by combining the genes of the best surviving organisms). Mutations can also occur at a small probability. A genetic algorithm is used to implement this entire process. The fitness score of the genetic algorithm is calculated by ranking the organisms by their distance from the target location.
 
-Useful Links:
-[https://stackoverflow.com/questions/47455680/running-a-python-script-on-google-cloud-compute-engine](url)
 
-To connect:
-ssh -i test_key.pem azureuser@evolutionsimulator.northcentralus.cloudapp.azure.com
+Demo Video: https://youtu.be/Ut49G4NN-nY
 
-Include
 
-#!/usr/bin/env python3
+## Installation & Setup
 
-    app.debug = True
-    app.run(host="0.0.0.0", port=5000)
+### 1. Clone the repository
+```bash
+git clone https://github.com/edwi-n/Evolution-Simulator/
+cd Evolution-Simulator
+```
 
-https://stackoverflow.com/questions/1509677/kill-detached-screen-session
+### 2. Create a virtual environment (optional)
+```bash
+python -m venv venv
+source venv/bin/activate      # On macOS/Linux
+venv\Scripts\activate         # On Windows
+```
+
+### 3. Install dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Run the application
+```bash
+python app.py
+```
+
+The app will be available at http://127.0.0.1:5000/
+
